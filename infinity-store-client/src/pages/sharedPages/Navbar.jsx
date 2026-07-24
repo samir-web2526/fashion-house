@@ -75,7 +75,7 @@ const Navbar = () => {
                         {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
                     </button>
 
-                    {user && (
+                    {user && user.role !== "admin" && (
   <Link
     to="/cart"
     className="relative text-2xl"

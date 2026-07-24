@@ -61,7 +61,7 @@ export default function NewArrivals() {
         >
           <div className="mb-2 flex items-center justify-center gap-2">
             <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              🆕 New Arrivals
+              New Arrivals
             </h2>
           </div>
           <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground sm:text-base">

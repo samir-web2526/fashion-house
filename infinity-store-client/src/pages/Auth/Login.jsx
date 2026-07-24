@@ -41,11 +41,11 @@ const onSubmit = async (formData) => {
         password: formData.password,
       });
 
-    await fetchUser();
+    const user = await fetchUser();
 
     toast.success("Login successful!");
 
-    navigate("/");
+    navigate(user?.role === "admin" ? "/dashboard" : "/");
   } catch (err) {
   const validationErrors = err.response?.data?.errors;
 
@@ -77,11 +77,11 @@ const handleGoogleLogin = async (credentialResponse) => {
 
     await googleLogin(credentialResponse.credential);
 
-    await fetchUser();
+    const user = await fetchUser();
 
     toast.success("Login successful!");
 
-    navigate("/");
+    navigate(user?.role === "admin" ? "/dashboard" : "/");
   } catch (err) {
     toast.error(
       err.response?.data?.message || "Google Login Failed"

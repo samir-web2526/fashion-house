@@ -28,9 +28,11 @@ export default function AuthProvider({ children }) {
       setLoading(true);
       const data = await getProfile();
       setUser(data);
+      return data;
     } catch (error) {
       console.error(error);
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }

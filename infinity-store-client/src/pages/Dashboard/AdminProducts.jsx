@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { Plus, Eye, Pencil, X, Package, Camera, ImagePlus, Upload } from "lucide-react";
+import { Plus, Eye, Pencil, X, Package, Camera, ImagePlus, Upload, Search, Filter, ChevronDown } from "lucide-react";
 import { Link } from "react-router";
 import { getProducts, createProduct } from "@/services/product.api";
 import { formatBDT } from "@/utils/currency";
@@ -63,6 +63,10 @@ export default function AdminProducts() {
   const [imagesDrag, setImagesDrag] = useState(false);
   const thumbnailInputRef = useRef(null);
   const imagesInputRef = useRef(null);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [stockFilter, setStockFilter] = useState("");
+  const [discountFilter, setDiscountFilter] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-products"],
@@ -78,6 +82,24 @@ export default function AdminProducts() {
   const categorySlugs = getAllCategorySlugs(categories);
 
   const products = data?.products ?? [];
+
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      product.title.toLowerCase().includes(search.toLowerCase()) ||
+      product.brand?.toLowerCase().includes(search.toLowerCase()) ||
+      product.category?.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !categoryFilter || product.category === categoryFilter;
+    const matchesStock =
+      stockFilter === "" ||
+      (stockFilter === "in-stock" && product.stock > 10) ||
+      (stockFilter === "low-stock" && product.stock > 0 && product.stock <= 10) ||
+      (stockFilter === "out-of-stock" && product.stock === 0);
+    const matchesDiscount =
+      discountFilter === "" ||
+      (discountFilter === "with-discount" && product.discountPercentage > 0) ||
+      (discountFilter === "no-discount" && product.discountPercentage === 0);
+    return matchesSearch && matchesCategory && matchesStock && matchesDiscount;
+  });
 
   const {
     register,
@@ -171,12 +193,61 @@ export default function AdminProducts() {
         <title>Admin Products | Infinity Store</title>
       </Helmet>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Products ({products.length})</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Products ({filteredProducts.length})</h1>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="size-4" data-icon="inline-start" />
           Add Product
         </Button>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-xl border border-border bg-card p-4 shadow-sm"
+      >
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+            >
+              <option value="">All Categories</option>
+              {categorySlugs.map((slug) => (
+                <option key={slug} value={slug}>{slug}</option>
+              ))}
+            </select>
+            <select
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value)}
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+            >
+              <option value="">All Stock</option>
+              <option value="in-stock">In Stock (&gt;10)</option>
+              <option value="low-stock">Low Stock (1-10)</option>
+              <option value="out-of-stock">Out of Stock</option>
+            </select>
+            <select
+              value={discountFilter}
+              onChange={(e) => setDiscountFilter(e.target.value)}
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+            >
+              <option value="">All Discounts</option>
+              <option value="with-discount">With Discount</option>
+              <option value="no-discount">No Discount</option>
+            </select>
+          </div>
+        </div>
+      </motion.div>
 
       <AnimatePresence>
         {showForm && (
@@ -414,10 +485,12 @@ export default function AdminProducts() {
       >
         {isLoading ? (
           <div className="p-5"><ProductSkeleton /></div>
-        ) : products.length === 0 ? (
+        ) : filteredProducts.length === 0 ? (
           <div className="py-20 text-center">
             <Package className="mx-auto size-12 text-muted-foreground/30" />
-            <p className="mt-3 text-sm text-muted-foreground">No products yet.</p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              {products.length === 0 ? "No products yet." : "No products match your filters."}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -433,7 +506,7 @@ export default function AdminProducts() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {products.map((product) => (
+                {filteredProducts.map((product) => (
                   <tr key={product._id} className="hover:bg-muted/30">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
