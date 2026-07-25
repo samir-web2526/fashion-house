@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ const authRoutes = require("./routes/auth.route");
 const userRoutes = require("./routes/users.route");
 const cartRoutes = require("./routes/cart.route");
 const orderRoutes = require("./routes/orders.route");
+const settingsRoutes = require("./routes/settings.route");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -26,6 +28,7 @@ app.use(
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 if (process.env.VERCEL) {
     app.use(async (req, res, next) => {
@@ -44,6 +47,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/settings", settingsRoutes);
 
 app.get("/", (req, res) => {
     res.send("Infinity Store Server is Running...");
