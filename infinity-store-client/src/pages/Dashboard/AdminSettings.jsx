@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef} from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Settings, Upload, Camera, Loader2, X } from "lucide-react";
@@ -24,14 +24,20 @@ export default function AdminSettings() {
     queryFn: getSettings,
   });
 
-  const [siteName, setSiteName] = useState(() => data?.siteName || "");
+  const [siteName, setSiteName] = useState("");
+  const [siteNameEdited, setSiteNameEdited] = useState(false);
   const [logoFile, setLogoFile] = useState(null);
-  const [logoPreview, setLogoPreview] = useState(() => data?.logo || "");
+  const [logoPreview, setLogoPreview] = useState("");
   const [logoDrag, setLogoDrag] = useState(false);
   const logoInputRef = useRef(null);
 
-  const displaySiteName = siteName || data?.siteName || "";
+  const displaySiteName = siteNameEdited ? siteName : (data?.siteName || "");
   const displayLogo = logoPreview || data?.logo || "";
+
+  const handleSiteNameChange = (e) => {
+    setSiteNameEdited(true);
+    setSiteName(e.target.value);
+  };
 
   const mutation = useMutation({
     mutationFn: updateSettings,
@@ -40,6 +46,7 @@ export default function AdminSettings() {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
       if (res.data?.siteName) {
         setSiteName(res.data.siteName);
+        setSiteNameEdited(true);
       }
       if (res.data?.logo) {
         setLogoPreview(res.data.logo);
@@ -119,7 +126,7 @@ export default function AdminSettings() {
           <label className="mb-1 block text-sm font-medium text-foreground">Site Name</label>
           <Input
             value={displaySiteName}
-            onChange={(e) => setSiteName(e.target.value)}
+            onChange={handleSiteNameChange}
             placeholder={settingsName}
           />
         </div>

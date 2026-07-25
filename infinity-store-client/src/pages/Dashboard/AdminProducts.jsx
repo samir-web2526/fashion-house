@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { Plus, Eye, Pencil, X, Package, Camera, ImagePlus, Upload, Search, Filter, ChevronDown } from "lucide-react";
+import { Plus, Eye, X, Package, Camera, ImagePlus, Search} from "lucide-react";
 import { Link } from "react-router";
 import { getProducts, createProduct } from "@/services/product.api";
 import { formatBDT } from "@/utils/currency";
