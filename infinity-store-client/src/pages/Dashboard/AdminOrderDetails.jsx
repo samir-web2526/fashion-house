@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { ArrowLeft, Package, MapPin, CreditCard, X, ChevronDown } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 import { getOrderById, updateOrderStatus } from "@/services/order.api";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,6 +46,7 @@ function formatDate(dateStr) {
 }
 
 export default function AdminOrderDetails() {
+  const { siteName } = useSettings();
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -93,7 +95,7 @@ export default function AdminOrderDetails() {
   return (
     <div className="space-y-6">
       <Helmet>
-        <title>Admin Order Details | Infinity Store</title>
+        <title>{`Admin Order Details | ${siteName}`}</title>
       </Helmet>
 
       <Button

@@ -8,6 +8,7 @@ import { getAllOrders, updateOrderStatus } from "@/services/order.api";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 const statusOptions = [
   "pending",
@@ -28,6 +29,7 @@ const statusColors = {
 };
 
 export default function AdminOrders() {
+  const { siteName } = useSettings();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -76,7 +78,7 @@ export default function AdminOrders() {
   return (
     <div className="space-y-6">
       <Helmet>
-        <title>Admin Orders | Infinity Store</title>
+        <title>{`Admin Orders | ${siteName}`}</title>
       </Helmet>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">

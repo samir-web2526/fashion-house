@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 const createCategorySchema = z.object({
   name: z.string().min(2, "Category name is required"),
@@ -41,6 +42,7 @@ function generateSlug(name) {
 }
 
 export default function AdminCategories() {
+  const { siteName } = useSettings();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -185,7 +187,7 @@ export default function AdminCategories() {
   return (
     <div className="space-y-6">
       <Helmet>
-        <title>Admin Categories | Infinity Store</title>
+        <title>{`Admin Categories | ${siteName}`}</title>
       </Helmet>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">

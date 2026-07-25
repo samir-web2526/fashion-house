@@ -1,11 +1,13 @@
 import Footer from "@/pages/sharedPages/Footer";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 export default function Terms() {
+  const { siteName } = useSettings();
   return (
     <div className="h-full overflow-y-auto bg-background">
       <Helmet>
-        <title>Terms &amp; Conditions | Infinity Store</title>
+        <title>{`Terms & Conditions | ${siteName}`}</title>
       </Helmet>
 
       <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -16,7 +18,7 @@ export default function Terms() {
           <div>
             <h2 className="text-xl font-bold text-foreground">1. Acceptance of Terms</h2>
             <p className="mt-2 text-muted-foreground">
-              By accessing and using Infinity Store, you agree to be bound by these Terms and
+              By accessing and using {siteName}, you agree to be bound by these Terms and
               Conditions. If you do not agree, please do not use our services.
             </p>
           </div>
@@ -49,14 +51,14 @@ export default function Terms() {
             <h2 className="text-xl font-bold text-foreground">5. Intellectual Property</h2>
             <p className="mt-2 text-muted-foreground">
               All content on this site, including text, graphics, logos, and images, is the
-              property of Infinity Store and is protected by copyright laws.
+              property of {siteName} and is protected by copyright laws.
             </p>
           </div>
 
           <div>
             <h2 className="text-xl font-bold text-foreground">6. Limitation of Liability</h2>
             <p className="mt-2 text-muted-foreground">
-              Infinity Store shall not be liable for any indirect, incidental, or consequential
+              {siteName} shall not be liable for any indirect, incidental, or consequential
               damages arising from the use of our products or services.
             </p>
           </div>

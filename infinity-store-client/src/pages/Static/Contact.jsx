@@ -1,12 +1,14 @@
 import { Phone, Mail, MapPin } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 import Footer from "@/pages/sharedPages/Footer";
 
 export default function Contact() {
+  const { siteName } = useSettings();
   return (
     <div className="h-full overflow-y-auto bg-background">
       <Helmet>
-        <title>Contact Us | Infinity Store</title>
+        <title>{`Contact Us | ${siteName}`}</title>
       </Helmet>
 
       <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">

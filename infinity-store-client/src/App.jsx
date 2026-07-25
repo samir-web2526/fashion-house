@@ -1,12 +1,6 @@
-import './App.css'
+import useFavicon from "./hooks/useFavicon";
 
-function App() {
-
-  return (
-    <>
-      
-    </>
-  )
+export default function App({ children }) {
+  useFavicon();
+  return children;
 }
-
-export default App

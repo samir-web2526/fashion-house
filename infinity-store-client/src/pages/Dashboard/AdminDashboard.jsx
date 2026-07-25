@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 const STATUS_CONFIG = {
   pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800", icon: Clock },
@@ -64,6 +65,7 @@ function DashboardSkeleton() {
 }
 
 export default function AdminDashboard() {
+  const { siteName } = useSettings();
   const queryClient = useQueryClient();
 
   const { data: ordersData, isLoading: ordersLoading } = useQuery({
@@ -112,7 +114,7 @@ export default function AdminDashboard() {
     return (
       <div className="space-y-6">
         <Helmet>
-          <title>Admin Dashboard | Infinity Store</title>
+          <title>{`Admin Dashboard | ${siteName}`}</title>
         </Helmet>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Admin Dashboard</h1>
         <DashboardSkeleton />
@@ -123,7 +125,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <Helmet>
-        <title>Admin Dashboard | Infinity Store</title>
+        <title>Admin Dashboard | {siteName}</title>
       </Helmet>
       <h1 className="text-2xl font-bold tracking-tight text-foreground">Admin Dashboard</h1>
 

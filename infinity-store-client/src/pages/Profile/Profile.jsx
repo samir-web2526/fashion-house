@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { Badge } from "@/components/ui/badge";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -21,6 +22,7 @@ const profileSchema = z.object({
 });
 
 export default function Profile() {
+  const { siteName } = useSettings();
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -57,7 +59,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
-      <Helmet><title>Profile | Infinity Store</title></Helmet>
+      <Helmet><title>{`Profile | ${siteName}`}</title></Helmet>
       <div className="mx-auto max-w-2xl">
         <Button variant="ghost" size="sm" className="mb-4" onClick={() => navigate(-1)}>
           <ArrowLeft className="size-4" data-icon="inline-start" />

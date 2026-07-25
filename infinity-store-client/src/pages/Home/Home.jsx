@@ -8,11 +8,13 @@ import CustomerReviews from "@/components/sections/CustomerReviews";
 import FAQ from "@/components/sections/FAQ";
 import Footer from "@/pages/sharedPages/Footer";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 export default function Home() {
+  const { siteName } = useSettings();
   return (
     <div className="h-full overflow-y-auto">
-      <Helmet><title>Home | Infinity Store</title></Helmet>
+      <Helmet><title>{`Home | ${siteName}`}</title></Helmet>
       <Hero />
       <Categories />
       <FeaturedProducts />

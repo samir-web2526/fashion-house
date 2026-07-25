@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatBDT } from "@/utils/currency";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 function ModalSkeleton() {
   return (
@@ -29,6 +30,7 @@ function ModalSkeleton() {
 }
 
 export default function ProductDetails() {
+  const { siteName } = useSettings();
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useAddToCart();
@@ -83,7 +85,7 @@ export default function ProductDetails() {
 
   return (
     <AnimatePresence>
-      <Helmet><title>Product Details | Infinity Store</title></Helmet>
+      <Helmet><title>{`Product Details | ${siteName}`}</title></Helmet>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

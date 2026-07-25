@@ -4,13 +4,13 @@ import { RouterProvider } from "react-router";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "react-hot-toast";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-
 import AuthProvider from "./context/AuthProvider.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { ThemeProvider } from "./context/ThemeProvider.jsx";
 import "./style.css";
 import router from "./Routes/router";
 
+import App from "./App.jsx";
 import {
   QueryClient,
   QueryClientProvider,
@@ -27,7 +27,8 @@ createRoot(document.getElementById("root")).render(
         <ThemeProvider>
           <CartProvider>
             <QueryClientProvider client={queryClient}>
-              <HelmetProvider>
+              <App>
+                <HelmetProvider>
                 <Toaster
                   position="top-right"
                   toastOptions={{
@@ -56,7 +57,8 @@ createRoot(document.getElementById("root")).render(
                   <RouterProvider router={router} />
                 </div>
 
-              </HelmetProvider>
+                </HelmetProvider>
+              </App>
             </QueryClientProvider>
           </CartProvider>
         </ThemeProvider>

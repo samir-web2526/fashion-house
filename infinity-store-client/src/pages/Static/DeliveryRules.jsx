@@ -1,11 +1,13 @@
 import Footer from "@/pages/sharedPages/Footer";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 export default function DeliveryRules() {
+  const { siteName } = useSettings();
   return (
     <div className="h-full overflow-y-auto bg-background">
       <Helmet>
-        <title>Delivery Rules | Infinity Store</title>
+        <title>{`Delivery Rules | ${siteName}`}</title>
       </Helmet>
 
       <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">

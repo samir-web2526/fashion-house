@@ -15,6 +15,7 @@ import Input from "@/components/ui/Input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 const productSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -53,6 +54,7 @@ function getAllCategorySlugs(categories) {
 }
 
 export default function AdminProducts() {
+  const { siteName } = useSettings();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [thumbnailFile, setThumbnailFile] = useState(null);
@@ -190,7 +192,7 @@ export default function AdminProducts() {
   return (
     <div className="space-y-6">
       <Helmet>
-        <title>Admin Products | Infinity Store</title>
+        <title>{`Admin Products | ${siteName}`}</title>
       </Helmet>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Products ({filteredProducts.length})</h1>

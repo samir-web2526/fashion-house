@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ProductCard from "@/components/sections/ProductCard";
 import Pagination from "@/components/ui/Pagination";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 function ProductSkeleton() {
   return (
@@ -36,6 +37,7 @@ const SORT_OPTIONS = [
 ];
 
 export default function Products() {
+  const { siteName } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const selectedCategory = searchParams.get("category") || "";
@@ -199,7 +201,7 @@ export default function Products() {
 
   return (
     <div className="flex h-full flex-col bg-background">
-      <Helmet><title>Products | Infinity Store</title></Helmet>
+      <Helmet><title>{`Products | ${siteName}`}</title></Helmet>
       <div className="shrink-0 px-4 pt-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <motion.div

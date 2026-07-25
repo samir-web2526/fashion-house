@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { ArrowLeft, Save, Trash2 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 import { getProductById, updateProduct, deleteProduct } from "@/services/product.api";
 import { getCategories } from "@/services/category.api";
 import { Button } from "@/components/ui/Button";
@@ -43,6 +44,7 @@ function getAllCategorySlugs(categories) {
 }
 
 export default function AdminProductDetails() {
+  const { siteName } = useSettings();
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -176,7 +178,7 @@ export default function AdminProductDetails() {
     return (
       <div className="space-y-6">
         <Helmet>
-          <title>Admin Product Details | Infinity Store</title>
+          <title>{`Admin Product Details | ${siteName}`}</title>
         </Helmet>
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-96 w-full rounded-xl" />
@@ -188,7 +190,7 @@ export default function AdminProductDetails() {
     return (
       <div className="py-20 text-center">
         <Helmet>
-          <title>Admin Product Details | Infinity Store</title>
+          <title>{`Admin Product Details | ${siteName}`}</title>
         </Helmet>
         <p className="text-sm text-muted-foreground">Product not found.</p>
         <Button className="mt-4 rounded-lg" onClick={() => navigate("/dashboard/products")}>
@@ -201,7 +203,7 @@ export default function AdminProductDetails() {
   return (
     <div className="space-y-6">
       <Helmet>
-        <title>Admin Product Details | Infinity Store</title>
+        <title>Admin Product Details | {siteName}</title>
       </Helmet>
       <Button
         variant="ghost"

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { ArrowLeft, Package, Truck, MapPin, CreditCard, X } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 import { getOrderById, cancelOrder } from "@/services/order.api";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,6 +34,7 @@ function formatDate(dateStr) {
 }
 
 export default function OrderDetails() {
+  const { siteName } = useSettings();
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -59,7 +61,7 @@ export default function OrderDetails() {
     return (
       <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
         <Helmet>
-          <title>Order Details | Infinity Store</title>
+          <title>{`Order Details | ${siteName}`}</title>
         </Helmet>
         <div className="mx-auto max-w-4xl">
           <DetailSkeleton />
@@ -72,7 +74,7 @@ export default function OrderDetails() {
     return (
       <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
         <Helmet>
-          <title>Order Details | Infinity Store</title>
+          <title>{`Order Details | ${siteName}`}</title>
         </Helmet>
         <div className="mx-auto max-w-4xl text-center py-20">
           <p className="text-sm text-muted-foreground">Order not found.</p>
@@ -89,7 +91,7 @@ export default function OrderDetails() {
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
       <Helmet>
-        <title>Order Details | Infinity Store</title>
+        <title>Order Details | {siteName}</title>
       </Helmet>
       <div className="mx-auto max-w-4xl">
         <Button

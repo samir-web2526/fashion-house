@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router";
 import { Phone, MapPin } from "lucide-react";
-import logo from "@/assets/images/logo.png";
+import fallbackLogo from "@/assets/images/logo.png";
+import useSettings from "@/hooks/useSettings";
 import {
   FaFacebookF,
   FaInstagram,
@@ -32,6 +33,7 @@ const SOCIAL_LINKS = [
 
 export default function Footer() {
   const navigate = useNavigate();
+  const { siteName, logo } = useSettings();
 
   const handleScrollLink = (e, to) => {
     if (to.startsWith("/#")) {
@@ -52,10 +54,10 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-5">
             <Link to="/" className="inline-block">
-              <img src={logo} alt="Infinity Store" className="h-12 w-auto dark:invert" />
+              <img src={logo || fallbackLogo} alt={siteName} className="h-12 w-auto dark:invert" />
             </Link>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Infinity Store — Your premium destination for quality products at
+              {siteName} — Your premium destination for quality products at
               unbeatable prices.
             </p>
             <div className="space-y-3 text-sm text-muted-foreground">
@@ -135,7 +137,7 @@ export default function Footer() {
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-5 sm:flex-row sm:px-6 lg:px-8">
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} Infinity Store. All rights
+            &copy; {new Date().getFullYear()} {siteName}. All rights
             reserved.
           </p>
           <div className="flex gap-4 text-xs text-muted-foreground">

@@ -5,12 +5,14 @@ import { useAuth } from "../../hooks/useAuth";
 import useCart from "@/hooks/useCart";
 import useTheme from "@/hooks/useTheme";
 import { getCart } from "../../services/cart.api";
-import logo from "@/assets/images/logo.png";
+import fallbackLogo from "@/assets/images/logo.png";
+import useSettings from "@/hooks/useSettings";
 
 const Navbar = () => {
     const { user, logout, loading } = useAuth();
     const { cartCount, refetchCartCount } = useCart();
     const { theme, toggleTheme } = useTheme();
+    const { siteName, logo } = useSettings();
     const navigate = useNavigate();
     const [search, setSearch] = useState("");
 
@@ -38,7 +40,7 @@ const Navbar = () => {
                     to="/"
                     className="flex items-center"
                 >
-                    <img src={logo} alt="Infinity Store" className="h-10 w-auto dark:invert" />
+                    <img src={logo || fallbackLogo} alt={siteName} className="h-10 w-auto dark:invert" />
                 </Link>
 
                 <nav className="hidden items-center gap-8 md:flex">

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { ArrowLeft, Lock, Save } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 import { changePassword } from "@/services/user.api";
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -21,6 +22,7 @@ const passwordSchema = z.object({
 });
 
 export default function ChangePassword() {
+  const { siteName } = useSettings();
   const navigate = useNavigate();
 
   const {
@@ -51,7 +53,7 @@ export default function ChangePassword() {
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
       <Helmet>
-        <title>Change Password | Infinity Store</title>
+        <title>{`Change Password | ${siteName}`}</title>
       </Helmet>
       <div className="mx-auto max-w-md">
         <Button variant="ghost" size="sm" className="mb-4" onClick={() => navigate(-1)}>

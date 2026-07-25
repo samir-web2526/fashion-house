@@ -1,11 +1,13 @@
 import Footer from "@/pages/sharedPages/Footer";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 export default function Privacy() {
+  const { siteName } = useSettings();
   return (
     <div className="h-full overflow-y-auto bg-background">
       <Helmet>
-        <title>Privacy Policy | Infinity Store</title>
+        <title>{`Privacy Policy | ${siteName}`}</title>
       </Helmet>
 
       <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">

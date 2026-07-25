@@ -13,13 +13,15 @@ import {
 import Input from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { registerUser } from "@/services/auth.api";
-import logo from "@/assets/images/logo.png";
+import fallbackLogo from "@/assets/images/logo.png";
+import useSettings from "@/hooks/useSettings";
 import { Helmet } from "react-helmet-async";
 
 export default function Register() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
+  const { siteName, logo } = useSettings();
 
   const {
     register,
@@ -75,11 +77,11 @@ export default function Register() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
-      <Helmet><title>Register | Infinity Store</title></Helmet>
+      <Helmet><title>{`Register | ${siteName}`}</title></Helmet>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <img src={logo} alt="Infinity Store" className="mx-auto mb-4 h-14 w-auto dark:invert" />
-          <h1 className="text-2xl font-bold text-foreground">Infinity Store</h1>
+          <img src={logo || fallbackLogo} alt={siteName} className="mx-auto mb-4 h-14 w-auto dark:invert" />
+          <h1 className="text-2xl font-bold text-foreground">{siteName}</h1>
         </div>
 
         <Card className="border-0 shadow-xl">

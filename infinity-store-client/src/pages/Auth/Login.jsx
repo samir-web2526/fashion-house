@@ -15,13 +15,15 @@ import { Label } from "@/components/ui/label";
 import { loginUser, googleLogin } from "@/services/auth.api";
 import { GoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/hooks/useAuth";
-import logo from "@/assets/images/logo.png";
+import fallbackLogo from "@/assets/images/logo.png";
+import useSettings from "@/hooks/useSettings";
 import { Helmet } from "react-helmet-async";
 
 export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const { fetchUser } = useAuth();
+  const { siteName, logo } = useSettings();
 
   const {
     register,
@@ -93,11 +95,13 @@ const handleGoogleLogin = async (credentialResponse) => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Helmet><title>Login | Infinity Store</title></Helmet>
+      <Helmet>
+        <title>{`Login | ${siteName}`}</title>
+      </Helmet>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <img src={logo} alt="Infinity Store" className="mx-auto mb-4 h-14 w-auto dark:invert" />
-          <h1 className="text-2xl font-bold text-foreground">Infinity Store</h1>
+          <img src={logo || fallbackLogo} alt={siteName} className="mx-auto mb-4 h-14 w-auto dark:invert" />
+          <h1 className="text-2xl font-bold text-foreground">{siteName}</h1>
         </div>
 
         <Card className="border-0 shadow-xl">

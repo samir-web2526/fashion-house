@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatBDT } from "@/utils/currency";
 import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
 
 function CartSkeleton() {
   return (
@@ -36,6 +37,7 @@ function getItemStatus(item) {
 }
 
 export default function Cart() {
+  const { siteName } = useSettings();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { refetchCartCount } = useCart();
@@ -114,7 +116,7 @@ export default function Cart() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
-        <Helmet><title>Cart | Infinity Store</title></Helmet>
+        <Helmet><title>{`Cart | ${siteName}`}</title></Helmet>
         <div className="mx-auto max-w-4xl">
           <h1 className="mb-6 text-2xl font-bold tracking-tight text-foreground">Cart</h1>
           <CartSkeleton />
@@ -126,7 +128,7 @@ export default function Cart() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
-        <Helmet><title>Cart | Infinity Store</title></Helmet>
+        <Helmet><title>{`Cart | ${siteName}`}</title></Helmet>
         <div className="mx-auto max-w-4xl text-center">
           <div className="flex flex-col items-center gap-4 py-20">
             <ShoppingBag className="size-16 text-muted-foreground/30" />
@@ -145,7 +147,7 @@ export default function Cart() {
 
   return (
     <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <Helmet><title>Cart | Infinity Store</title></Helmet>
+      <Helmet><title>{`Cart | ${siteName}`}</title></Helmet>
       <div className="mx-auto max-w-4xl">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
