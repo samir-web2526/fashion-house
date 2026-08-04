@@ -18,6 +18,7 @@ const QUICK_LINKS = [
 ];
 
 const USEFUL_LINKS = [
+  { label: "About Us", to: "/about" },
   { label: "Terms & Conditions", to: "/terms" },
   { label: "Privacy Policy", to: "/privacy" },
   { label: "Return Policy", to: "/return-policy" },

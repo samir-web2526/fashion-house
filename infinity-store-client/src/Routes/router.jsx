@@ -33,6 +33,7 @@ import Privacy from "@/pages/Static/Privacy";
 import ReturnPolicy from "@/pages/Static/ReturnPolicy";
 import DeliveryRules from "@/pages/Static/DeliveryRules";
 import Contact from "@/pages/Static/Contact";
+import About from "@/pages/Static/About";
 
 const router = createBrowserRouter([
   {
@@ -72,6 +73,10 @@ const router = createBrowserRouter([
       {
         path: "contact",
         element: <Contact />,
+      },
+      {
+        path: "about",
+        element: <About />,
       },
     ],
   },
