@@ -41,7 +41,7 @@ export default function Hero() {
     return (
       <section
         id="hero"
-        className="relative h-[400px] overflow-hidden bg-gradient-to-br from-background via-background to-muted sm:h-[500px] lg:h-[600px]"
+        className="relative h-100 overflow-hidden bg-linear-to-br from-background via-background to-muted sm:h-125 lg:h-150"
       >
         <div className="flex size-full items-center justify-center">
           <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -54,7 +54,7 @@ export default function Hero() {
     return (
       <section
         id="hero"
-        className="relative h-[400px] overflow-hidden bg-gradient-to-br from-background via-background to-muted sm:h-[500px] lg:h-[600px]"
+        className="relative h-100 overflow-hidden bg-linear-to-br from-background via-background to-muted sm:h-125 lg:h-150"
       >
         <div className="flex size-full items-center justify-center">
           <div className="flex flex-col items-center gap-4 text-muted-foreground/40">
@@ -92,7 +92,7 @@ export default function Hero() {
           nextEl: ".hero-next",
         }}
         loop={products.length > 1}
-        className="hero-swiper h-[400px] sm:h-[500px] lg:h-[600px]"
+        className="hero-swiper h-100 sm:h-125 lg:h-150"
       >
         {products.map((product) => (
           <SwiperSlide key={product._id}>
@@ -102,7 +102,7 @@ export default function Hero() {
                 alt={product.title}
                 className="size-full object-cover object-center"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute inset-0 flex items-end">
                 <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-4 sm:px-6 sm:pb-16 lg:px-8 lg:pb-24">
                   <div className="max-w-lg">
@@ -124,7 +124,9 @@ export default function Hero() {
                         size="lg"
                         className="rounded-full px-6 sm:px-8"
                         nativeButton={false}
-                        render={<Link to={`/products/${product._id}`} />}
+                        render={
+                          <Link to={`/products/${product._id}`} />
+                        }
                       >
                         <ShoppingCart className="size-4" />
                         Buy Now
@@ -136,7 +138,6 @@ export default function Hero() {
             </div>
           </SwiperSlide>
         ))}
-
         {products.length > 1 && (
           <>
             <button className="hero-prev absolute left-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-background/80 text-foreground shadow-md backdrop-blur-sm transition-colors hover:bg-background sm:left-5 sm:size-12">
