@@ -5,6 +5,8 @@ const createCategorySchema = z.object({
 
     slug: z.string().min(2, "Slug is required"),
 
+    image: z.string().optional().default(""),
+
     children: z.array(
         z.object({
             name: z.string().min(2, "Child name is required"),
@@ -20,6 +22,8 @@ const updateCategorySchema = z.object({
     name: z.string().min(2).optional(),
 
     slug: z.string().min(2).optional(),
+
+    image: z.string().optional(),
 
     children: z.array(
         z.object({

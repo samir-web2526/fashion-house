@@ -191,7 +191,6 @@ const login = async (req, res) => {
 
 const googleLogin = async (req, res) => {
     try {
-
         const { token } = req.body;
 
         const ticket = await client.verifyIdToken({

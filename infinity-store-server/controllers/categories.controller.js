@@ -9,6 +9,7 @@ const createCategory = async (req, res) => {
         const category = {
             name: req.body.name.trim(),
             slug: req.body.slug.trim(),
+            image: req.body.image || "",
             children: req.body.children || [],
             createdAt: new Date(),
             updatedAt: new Date()
