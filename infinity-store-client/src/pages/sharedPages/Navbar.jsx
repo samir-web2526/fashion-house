@@ -61,13 +61,13 @@ const Navbar = () => {
                             <ChevronDown className="size-4" />
                         </button>
 
-                        <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 absolute left-0 top-full z-50 mt-2 w-125 rounded-lg border bg-background p-4 shadow-lg">
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-200 fixed left-1/2 top-16 z-50 -translate-x-1/2 w-full max-w-7xl rounded-lg border bg-background p-4 shadow-lg">
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-4 px-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                                 {categories?.map((cat) => (
                                     <div key={cat._id}>
                                         <Link
                                             to={`/products?category=${cat.slug}`}
-                                            className="font-semibold text-sm hover:text-amber-600 transition-colors"
+                                            className="font-semibold text-sm hover:text-amber-600 transition-colors whitespace-nowrap"
                                         >
                                             {cat.name}
                                         </Link>
@@ -77,7 +77,7 @@ const Navbar = () => {
                                                     <li key={child.slug}>
                                                         <Link
                                                             to={`/products?category=${child.slug}`}
-                                                            className="text-sm text-muted-foreground hover:text-amber-600 transition-colors"
+                                                            className="text-sm text-muted-foreground hover:text-amber-600 transition-colors whitespace-nowrap"
                                                         >
                                                             {child.name}
                                                         </Link>

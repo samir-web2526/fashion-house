@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { Plus, Trash2, X, FolderTree, ChevronRight, Pencil, Save } from "lucide-react";
+import { Plus, Trash2, X, FolderTree, ChevronRight, Pencil, Save, Upload, Image } from "lucide-react";
 import { getCategories, createCategory, updateCategory, deleteCategory } from "@/services/category.api";
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -41,12 +41,22 @@ function generateSlug(name) {
   return name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 }
 
+const toBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+  });
+
 export default function AdminCategories() {
   const { siteName } = useSettings();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [createImage, setCreateImage] = useState("");
+  const [editImage, setEditImage] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-categories"],
@@ -148,6 +158,7 @@ export default function AdminCategories() {
     const payload = {
       name: formData.name,
       slug: formData.slug.toLowerCase().replace(/\s+/g, "-"),
+      image: createImage,
       children: formData.children.map((child) => ({
         name: child.name,
         slug: child.slug.toLowerCase().replace(/\s+/g, "-"),
@@ -161,6 +172,7 @@ export default function AdminCategories() {
     const payload = {};
     if (formData.name) payload.name = formData.name;
     if (formData.slug) payload.slug = formData.slug.toLowerCase().replace(/\s+/g, "-");
+    if (editImage) payload.image = editImage;
     if (formData.children) {
       payload.children = formData.children.map((child) => ({
         name: child.name,
@@ -171,8 +183,31 @@ export default function AdminCategories() {
     updateMutation.mutate({ id: editingId, payload });
   };
 
+  const handleCreateImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be less than 2MB");
+      return;
+    }
+    const base64 = await toBase64(file);
+    setCreateImage(base64);
+  };
+
+  const handleEditImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be less than 2MB");
+      return;
+    }
+    const base64 = await toBase64(file);
+    setEditImage(base64);
+  };
+
   const startEdit = (cat) => {
     setEditingId(cat._id);
+    setEditImage(cat.image || "");
     resetUpdate({
       name: cat.name,
       slug: cat.slug,
@@ -254,6 +289,31 @@ export default function AdminCategories() {
                 </div>
 
                 <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground">Category Image</label>
+                  <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-border p-4 transition-colors hover:border-primary/50 hover:bg-muted/50">
+                    {createImage ? (
+                      <img src={createImage} alt="Preview" className="h-20 w-20 rounded-full object-cover" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                        <Upload className="size-8" />
+                        <p className="text-sm">Click to upload image</p>
+                        <p className="text-xs">PNG, JPG up to 2MB</p>
+                      </div>
+                    )}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleCreateImageUpload} />
+                  </label>
+                  {createImage && (
+                    <button
+                      type="button"
+                      className="mt-1 text-xs text-red-500 hover:text-red-700"
+                      onClick={() => setCreateImage("")}
+                    >
+                      Remove image
+                    </button>
+                  )}
+                </div>
+
+                <div>
                   <div className="mb-3 flex items-center justify-between">
                     <label className="text-sm font-medium text-foreground">Sub Categories</label>
                     <Button
@@ -312,7 +372,7 @@ export default function AdminCategories() {
                   <Button type="submit" disabled={createMutation.isPending} className="rounded-lg">
                     {createMutation.isPending ? "Creating..." : "Create Category"}
                   </Button>
-                  <Button type="button" variant="ghost" onClick={() => { setShowForm(false); resetCreate(); }}>
+                  <Button type="button" variant="ghost" onClick={() => { setShowForm(false); resetCreate(); setCreateImage(""); }}>
                     Cancel
                   </Button>
                 </div>
@@ -350,8 +410,12 @@ export default function AdminCategories() {
                 <div className="px-4 py-4 sm:px-5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <FolderTree className="size-4" />
+                      <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary/10 text-primary">
+                        {cat.image ? (
+                          <img src={cat.image} alt={cat.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <FolderTree className="size-4" />
+                        )}
                       </div>
                       <div className="min-w-0">
                         <p className="font-medium text-foreground">{cat.name}</p>
@@ -433,6 +497,31 @@ export default function AdminCategories() {
                           />
                           {errUpdate.slug && <p className="mt-1 text-xs text-red-500">{errUpdate.slug.message}</p>}
                         </div>
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-foreground">Category Image</label>
+                        <label className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-border p-4 transition-colors hover:border-primary/50 hover:bg-muted/50">
+                          {editImage ? (
+                            <img src={editImage} alt="Preview" className="h-20 w-20 rounded-full object-cover" />
+                          ) : (
+                            <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                              <Upload className="size-8" />
+                              <p className="text-sm">Click to upload image</p>
+                              <p className="text-xs">PNG, JPG up to 2MB</p>
+                            </div>
+                          )}
+                          <input type="file" accept="image/*" className="hidden" onChange={handleEditImageUpload} />
+                        </label>
+                        {editImage && (
+                          <button
+                            type="button"
+                            className="mt-1 text-xs text-red-500 hover:text-red-700"
+                            onClick={() => setEditImage("")}
+                          >
+                            Remove image
+                          </button>
+                        )}
                       </div>
 
                       <div>

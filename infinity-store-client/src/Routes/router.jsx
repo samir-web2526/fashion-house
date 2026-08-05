@@ -27,6 +27,7 @@ import AdminOrders from "@/pages/Dashboard/AdminOrders";
 import AdminOrderDetails from "@/pages/Dashboard/AdminOrderDetails";
 import AdminUsers from "@/pages/Dashboard/AdminUsers";
 import AdminSettings from "@/pages/Dashboard/AdminSettings";
+import AdminBanners from "@/pages/Dashboard/AdminBanners";
 
 import Terms from "@/pages/Static/Terms";
 import Privacy from "@/pages/Static/Privacy";
@@ -158,6 +159,10 @@ const router = createBrowserRouter([
           {
             path: "settings",
             element: <AdminRoute><AdminSettings /></AdminRoute>,
+          },
+          {
+            path: "banners",
+            element: <AdminRoute><AdminBanners /></AdminRoute>,
           }
 
         ],

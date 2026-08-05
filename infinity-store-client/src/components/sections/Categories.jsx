@@ -10,8 +10,8 @@ function CategoriesSkeleton() {
     <div className="flex gap-5 overflow-hidden">
       {Array.from({ length: 7 }).map((_, i) => (
         <div key={i} className="shrink-0 animate-pulse">
-          <div className="flex h-28 w-28 items-center justify-center rounded-2xl border border-border bg-card sm:h-32 sm:w-32">
-            <div className="h-16 w-16 rounded-xl bg-muted sm:h-20 sm:w-20" />
+          <div className="flex h-28 w-28 items-center justify-center rounded-full border border-gray-200 bg-gray-50 sm:h-32 sm:w-32 overflow-hidden">
+            <div className="h-16 w-16 rounded-full bg-muted sm:h-20 sm:w-20" />
           </div>
           <div className="mx-auto mt-3 h-3.5 w-16 rounded bg-muted" />
         </div>
@@ -55,6 +55,7 @@ export default function Categories() {
       return {
         name: parent.name,
         slug: parent.slug,
+        image: parent.image || "",
         count: totalCount,
       };
     });

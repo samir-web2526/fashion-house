@@ -18,6 +18,10 @@ export default function Sidebar({ open, onClose }) {
       path: "/dashboard/categories",
     },
     {
+      name: "Banners",
+      path: "/dashboard/banners",
+    },
+    {
       name: "Orders",
       path: "/dashboard/orders",
     },
