@@ -51,7 +51,7 @@ export default function Hero() {
   }
 
   return (
-    <section id="hero" className="relative overflow-hidden px-4 sm:px-6 lg:px-40 pt-4 sm:pt-6">
+    <section id="hero" className="relative overflow-hidden px-4 sm:px-6 lg:px-28 pt-4 sm:pt-6">
       <style>{heroStyles}</style>
       <div className="mx-auto max-w-6xl overflow-hidden rounded-2xl">
       <Swiper
@@ -64,7 +64,7 @@ export default function Hero() {
           nextEl: ".hero-next",
         }}
         loop={banners.length > 1}
-        className="hero-swiper h-80 sm:h-100 lg:h-125"
+        className="hero-swiper h-80 sm:h-100 lg:h-100"
       >
         {banners.map((banner) => (
           <SwiperSlide key={banner._id}>

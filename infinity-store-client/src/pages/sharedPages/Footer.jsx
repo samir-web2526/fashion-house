@@ -55,7 +55,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-5">
             <Link to="/" className="inline-block">
-              <img src={logo || fallbackLogo} alt={siteName} className="h-12 w-auto dark:invert" />
+              <img src={logo || fallbackLogo} alt={siteName} className="h-20 w-auto dark:invert" />
             </Link>
             <p className="text-sm leading-relaxed text-muted-foreground">
               {siteName} — Your premium destination for quality products at

@@ -62,7 +62,7 @@ export default function Categories() {
   }, [categoriesData, productsData]);
 
   return (
-    <section id="categories" className="bg-background py-12 sm:py-16">
+    <section id="categories" className="bg-background py-2 sm:py-6">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -71,9 +71,9 @@ export default function Categories() {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          {/* <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Categories
-          </h2>
+          </h2> */}
         </motion.div>
 
         {isLoading ? (
@@ -83,7 +83,7 @@ export default function Categories() {
             No categories found.
           </p>
         ) : (
-          <div className="-mx-4 flex gap-5 overflow-x-auto px-4 pb-4 sm:gap-6 [&::-webkit-scrollbar]:hidden [&::-webkit-scrollbar]:h-0">
+          <div className="-mx-4 flex gap-5 overflow-x-auto px-4 pb-0 sm:gap-6 [&::-webkit-scrollbar]:hidden [&::-webkit-scrollbar]:h-0">
             {categories.map((cat, i) => (
               <CategoryCard key={cat.slug} category={cat} index={i} />
             ))}

@@ -49,7 +49,7 @@ const Navbar = () => {
                     to="/"
                     className="flex items-center"
                 >
-                    <img src={logo || fallbackLogo} alt={siteName} className="h-10 w-auto dark:invert" />
+                    <img src={logo || fallbackLogo} alt={siteName} className="h-14 w-auto dark:invert" />
                 </Link>
 
                 <nav className="hidden items-center gap-8 md:flex">
