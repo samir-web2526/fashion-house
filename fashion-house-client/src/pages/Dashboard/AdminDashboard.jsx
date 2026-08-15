@@ -3,16 +3,14 @@ import { Link } from "react-router";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import {
-  DollarSign, ShoppingCart, Package, Users, TrendingUp,
+  DollarSign, ShoppingCart, Package, TrendingUp,
   Clock, CheckCircle, Truck, XCircle, ArrowUpRight,
   BarChart3,
 } from "lucide-react";
 import { getAllOrders, updateOrderStatus } from "@/services/order.api";
 import { formatBDT } from "@/utils/currency";
-import { getUsers } from "@/services/user.api";
 import { getProducts } from "@/services/product.api";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
@@ -54,8 +52,8 @@ function StatCard({ title, value, icon: Icon, color, loading, delay }) {
 function DashboardSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-28 rounded-xl" />
         ))}
       </div>
@@ -73,11 +71,6 @@ export default function AdminDashboard() {
     queryFn: getAllOrders,
   });
 
-  const { data: usersData, isLoading: usersLoading } = useQuery({
-    queryKey: ["admin-users"],
-    queryFn: getUsers,
-  });
-
   const { data: productsData, isLoading: productsLoading } = useQuery({
     queryKey: ["admin-products"],
     queryFn: () => getProducts({ limit: 1000 }),
@@ -85,19 +78,33 @@ export default function AdminDashboard() {
 
   const statusMutation = useMutation({
     mutationFn: ({ id, orderStatus }) => updateOrderStatus(id, { orderStatus }),
-    onSuccess: () => {
-      toast.success("Order status updated");
+    onMutate: async ({ id, orderStatus }) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-orders"] });
+      const prev = queryClient.getQueryData(["admin-orders"]);
+      queryClient.setQueryData(["admin-orders"], (old) => {
+        const orders = Array.isArray(old) ? old : old?.orders ?? [];
+        const updated = orders.map((o) =>
+          (o._id === id) ? { ...o, orderStatus } : o
+        );
+        return Array.isArray(old) ? updated : { ...old, orders: updated };
+      });
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["admin-orders"], ctx.prev);
+      toast.error("Failed to update status");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
     },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to update status");
+    onSuccess: () => {
+      toast.success("Order status updated");
     },
   });
 
   const orders = ordersData?.orders ?? [];
   const products = productsData?.products ?? [];
-  const users = usersData?.users ?? [];
-  const isLoading = ordersLoading || usersLoading || productsLoading;
+  const isLoading = ordersLoading || productsLoading;
 
   const totalRevenue = orders
     .filter((o) => o.orderStatus !== "cancelled")
@@ -129,7 +136,7 @@ export default function AdminDashboard() {
       </Helmet>
       <h1 className="text-2xl font-bold tracking-tight text-foreground">Admin Dashboard</h1>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="Total Revenue"
           value={formatBDT(totalRevenue)}
@@ -152,14 +159,6 @@ export default function AdminDashboard() {
           color="bg-muted text-foreground"
           delay={0.1}
           loading={productsLoading}
-        />
-        <StatCard
-          title="Total Users"
-          value={usersData?.totalUsers ?? users.length}
-          icon={Users}
-          color="bg-muted text-foreground"
-          delay={0.15}
-          loading={usersLoading}
         />
       </div>
 
@@ -271,62 +270,6 @@ export default function AdminDashboard() {
           </table>
         </div>
       </motion.div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-xl border border-border bg-card p-5 shadow-sm"
-        >
-          <h3 className="mb-3 text-sm font-semibold text-foreground">Low Stock Products</h3>
-          <div className="space-y-2">
-            {products
-              .filter((p) => p.stock <= 10 && p.stock > 0)
-              .sort((a, b) => a.stock - b.stock)
-              .slice(0, 5)
-              .map((p) => (
-                <div key={p._id} className="flex items-center justify-between text-sm">
-                  <span className="truncate text-muted-foreground">{p.title}</span>
-                  <Badge variant="destructive" className="ml-2 shrink-0 text-[11px]">
-                    {p.stock} left
-                  </Badge>
-                </div>
-              ))}
-            {products.filter((p) => p.stock <= 10 && p.stock > 0).length === 0 && (
-              <p className="text-xs text-muted-foreground">All products well stocked.</p>
-            )}
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rounded-xl border border-border bg-card p-5 shadow-sm"
-        >
-          <h3 className="mb-3 text-sm font-semibold text-foreground">Recent Users</h3>
-          <div className="space-y-2">
-            {users.slice(0, 5).map((u) => (
-              <div key={u._id} className="flex items-center gap-2 text-sm">
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
-                  {u.name?.charAt(0)?.toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium text-foreground">{u.name}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{u.email}</p>
-                </div>
-                <Badge variant="secondary" className="shrink-0 text-[10px] capitalize">
-                  {u.role}
-                </Badge>
-              </div>
-            ))}
-            {users.length === 0 && (
-              <p className="text-xs text-muted-foreground">No users yet.</p>
-            )}
-          </div>
-        </motion.div>
-      </div>
     </div>
   );
 }

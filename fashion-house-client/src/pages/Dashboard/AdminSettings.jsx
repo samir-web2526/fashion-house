@@ -53,9 +53,20 @@ export default function AdminSettings() {
 
   const mutation = useMutation({
     mutationFn: updateSettings,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["settings"] });
+      const prev = queryClient.getQueryData(["settings"]);
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["settings"], ctx.prev);
+      toast.error("Failed to update settings");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+    },
     onSuccess: (res) => {
       toast.success("Settings updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["settings"] });
       if (res.data?.siteName) {
         setSiteName(res.data.siteName);
         setSiteNameEdited(true);
@@ -64,9 +75,6 @@ export default function AdminSettings() {
         setLogoPreview(res.data.logo);
         setLogoFile(null);
       }
-    },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to update settings");
     },
   });
 

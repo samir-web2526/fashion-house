@@ -336,20 +336,35 @@ const getAllOrders = async (req, res) => {
         const db = getDB();
         const ordersCollection = db.collection("orders");
 
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const status = req.query.status || "";
+        const skip = (page - 1) * limit;
+
+        const query = {};
+        if (status && status !== "all") {
+            query.orderStatus = status;
+        }
+
+        const totalOrders = await ordersCollection.countDocuments(query);
+
         const orders = await ordersCollection
-            .find({})
+            .find(query)
             .sort({
                 createdAt: -1
             })
+            .skip(skip)
+            .limit(limit)
             .toArray();
 
         res.send({
-            totalOrders: orders.length,
+            totalOrders,
+            currentPage: page,
+            totalPages: Math.ceil(totalOrders / limit),
             orders
         });
 
     } catch (error) {
-        console.log(error);
 
         res.status(500).send({
             message: "Internal Server Error"
@@ -374,7 +389,7 @@ const getSingleOrder = async (req, res) => {
             });
         }
 
-        const isOwner = order.userId.toString() === req.user.id;
+        const isOwner = order.userId && order.userId.toString() === req.user.id;
         const isAdmin = req.user.role === "admin";
 
         if (!isOwner && !isAdmin) {
@@ -511,7 +526,7 @@ const cancelOrder = async (req, res) => {
             });
         }
 
-        const isOwner = order.userId.toString() === req.user.id;
+        const isOwner = order.userId && order.userId.toString() === req.user.id;
         const isAdmin = req.user.role === "admin";
 
         if (!isOwner && !isAdmin) {
@@ -571,7 +586,7 @@ const sendInvoice = async (req, res) => {
             return res.status(404).send({ message: "Order not found" });
         }
 
-        const email = order.shippingAddress?.email;
+        const email = req.body?.email || order.shippingAddress?.email;
         if (!email) {
             return res.status(400).send({ message: "No email address found for this order" });
         }

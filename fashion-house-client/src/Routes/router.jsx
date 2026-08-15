@@ -21,9 +21,10 @@ import NotFound from "../pages/Error/NotFound";
 import AdminCategories from "@/pages/Dashboard/AdminCategories";
 import AdminOrders from "@/pages/Dashboard/AdminOrders";
 import AdminOrderDetails from "@/pages/Dashboard/AdminOrderDetails";
-import AdminUsers from "@/pages/Dashboard/AdminUsers";
 import AdminSettings from "@/pages/Dashboard/AdminSettings";
 import AdminBanners from "@/pages/Dashboard/AdminBanners";
+import Profile from "@/pages/Profile/Profile";
+import ChangePassword from "@/pages/Profile/ChangePassword";
 
 import Terms from "@/pages/Static/Terms";
 import Privacy from "@/pages/Static/Privacy";
@@ -131,16 +132,20 @@ const router = createBrowserRouter([
         element: <AdminOrderDetails />,
       },
       {
-        path: "users",
-        element: <AdminUsers />,
-      },
-      {
         path: "settings",
         element: <AdminSettings />,
       },
       {
         path: "banners",
         element: <AdminBanners />,
+      },
+      {
+        path: "admin-profile",
+        element: <Profile />,
+      },
+      {
+        path: "change-password",
+        element: <ChangePassword />,
       }
     ],
   },

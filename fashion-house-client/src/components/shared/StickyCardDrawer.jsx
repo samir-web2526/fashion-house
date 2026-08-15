@@ -163,9 +163,9 @@ export default function StickyCartDrawer() {
                         {item.price ? formatBDT(item.price * item.quantity) : "N/A"}
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      className="rounded-lg p-2 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+  <button
+    type="button"
+    className="rounded-lg p-2 text-red-400 transition hover:bg-red-50 hover:text-red-500"
                       onClick={() => removeMutation.mutate({ productId: item.productId, size: item.size || "" })}
                       aria-label={`Remove ${item.title || "item"} from cart`}
                     >

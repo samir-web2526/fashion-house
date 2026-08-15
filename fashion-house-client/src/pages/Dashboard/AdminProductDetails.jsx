@@ -136,13 +136,17 @@ export default function AdminProductDetails() {
 
   const updateMutation = useMutation({
     mutationFn: (payload) => updateProduct(id, payload),
-    onSuccess: () => {
-      toast.success("Product updated");
-      queryClient.invalidateQueries({ queryKey: ["admin-product", id] });
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["admin-product", id] });
+      await queryClient.cancelQueries({ queryKey: ["admin-products"] });
+      const prevDetail = queryClient.getQueryData(["admin-product", id]);
+      const prevList = queryClient.getQueryData(["admin-products"]);
+      return { prevDetail, prevList };
     },
-    onError: (err) => {
-      const data = err?.response?.data;
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prevDetail) queryClient.setQueryData(["admin-product", id], ctx.prevDetail);
+      if (ctx?.prevList) queryClient.setQueryData(["admin-products"], ctx.prevList);
+      const data = _err?.response?.data;
       if (data?.errors && Array.isArray(data.errors)) {
         data.errors.forEach((e) => {
           const field = e.path?.[e.path.length - 1];
@@ -153,17 +157,38 @@ export default function AdminProductDetails() {
         toast.error(data?.message || data?.error || "Failed to update product");
       }
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-product", id] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    },
+    onSuccess: () => {
+      toast.success("Product updated");
+    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
+    onMutate: async (deletedId) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-products"] });
+      const prev = queryClient.getQueryData(["admin-products"]);
+      queryClient.setQueryData(["admin-products"], (old) => {
+        if (!old) return old;
+        const products = old.products ?? old;
+        const updated = Array.isArray(products) ? products.filter((p) => p._id !== deletedId) : products;
+        return old.products !== undefined ? { ...old, products: updated } : updated;
+      });
+      return { prev };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["admin-products"], ctx.prev);
+      toast.error("Failed to delete product");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    },
     onSuccess: () => {
       toast.success("Product deleted");
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       navigate("/dashboard/products");
-    },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to delete product");
     },
   });
 
@@ -285,15 +310,15 @@ export default function AdminProductDetails() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-gray-700 hover:bg-gray-100 hover:text-gray-800"
+                className="text-red-500 hover:bg-red-50 hover:text-red-600"
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 <Trash2 className="size-4" data-icon="inline-start" />
                 Delete
               </Button>
             ) : (
-              <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-100 px-3 py-2">
-                <span className="text-sm text-gray-800">Delete this product?</span>
+              <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                <span className="text-sm text-red-700">Delete this product?</span>
                 <Button
                   variant="destructive"
                   size="sm"

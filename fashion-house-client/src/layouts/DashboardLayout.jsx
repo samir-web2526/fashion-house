@@ -46,7 +46,7 @@ export default function DashboardLayout() {
                 className="menu dropdown-content z-50 mt-3 w-48 rounded-box bg-background p-2 shadow"
               >
                 <li>
-                  <button onClick={() => navigate("/profile")}>
+                  <button onClick={() => navigate("/dashboard/admin-profile")}>
                     Profile
                   </button>
                 </li>

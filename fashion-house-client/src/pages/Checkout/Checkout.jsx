@@ -91,14 +91,14 @@ export default function Checkout() {
 
   const orderMutation = useMutation({
     mutationFn: createGuestOrder,
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       toast.success("Order placed successfully!");
       clearLocalCart();
       refetchCartCount(0);
       if (data?.insertedId) {
-        sendOrderInvoice(data.insertedId).catch(() => {});
+        sendOrderInvoice(data.insertedId, variables.shippingAddress?.email).catch(() => {});
       }
-      navigate(`/orders/${data.insertedId}`);
+      navigate(`/orders/${data?.insertedId || data?.orderId}`);
     },
     onError: (err) => {
       const data = err?.response?.data;

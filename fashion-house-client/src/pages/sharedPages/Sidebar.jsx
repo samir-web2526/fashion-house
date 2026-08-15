@@ -1,5 +1,4 @@
 import { NavLink } from "react-router";
-import fallbackLogo from "@/assets/images/logo.png";
 import useSettings from "@/hooks/useSettings";
 
 export default function Sidebar({ open, onClose }) {
@@ -26,16 +25,12 @@ export default function Sidebar({ open, onClose }) {
       path: "/dashboard/orders",
     },
     {
-      name: "Users",
-      path: "/dashboard/users",
-    },
-    {
       name: "Settings",
       path: "/dashboard/settings",
     },
     {
       name: "Profile",
-      path: "/profile",
+      path: "/dashboard/admin-profile",
     },
     {
       name: "Home",
@@ -57,7 +52,7 @@ export default function Sidebar({ open, onClose }) {
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <img src={logo || fallbackLogo} alt={siteName} className="mb-6 h-16 w-auto dark:invert" />
+        {logo && <img src={logo} alt={siteName} className="mb-6 h-16 w-auto dark:invert" />}
 
         <nav className="space-y-2">
           {menuItems.map((item) => (

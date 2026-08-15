@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, ShoppingCart, Sun, Moon, ChevronDown, Menu, X, Phone, Package, House, LayoutGrid, Store, TrendingUp, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import useCart from "@/hooks/useCart";
@@ -7,16 +7,20 @@ import useTheme from "@/hooks/useTheme";
 import { getCategories } from "@/services/category.api";
 import useSettings from "@/hooks/useSettings";
 import { getLocalCartCount } from "@/utils/localCart";
+import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
     const { cartCount, refetchCartCount } = useCart();
     const { theme, toggleTheme } = useTheme();
     const { siteName, logo, contactPhone } = useSettings();
+    const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [search, setSearch] = useState("");
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mobileCatOpen, setMobileCatOpen] = useState(false);
+    const [profileOpen, setProfileOpen] = useState(false);
+    const profileRef = useRef(null);
 
     const scrollToSection = (sectionId) => {
         if (location.pathname === "/") {
@@ -35,6 +39,16 @@ const Navbar = () => {
     useEffect(() => {
         refetchCartCount(getLocalCartCount());
     }, [refetchCartCount]);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (profileRef.current && !profileRef.current.contains(e.target)) {
+                setProfileOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     return (
         <header className="sticky top-0 z-100 bg-background">
@@ -111,12 +125,45 @@ const Navbar = () => {
                             )}
                         </Link>
 
-                        <Link
-                            to="/login"
-                            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                        >
-                            Admin
-                        </Link>
+                        {user ? (
+                            <div className="relative" ref={profileRef}>
+                                <button
+                                    onClick={() => setProfileOpen(!profileOpen)}
+                                    className="flex size-9 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground cursor-pointer"
+                                >
+                                    {user?.name?.charAt(0).toUpperCase()}
+                                </button>
+                                {profileOpen && (
+                                    <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-border bg-background p-2 shadow-lg z-50">
+                                        <div className="px-3 py-2 border-b border-border mb-1">
+                                            <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
+                                            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                                        </div>
+                                        {user?.role === "admin" && (
+                                            <button
+                                                onClick={() => { navigate("/dashboard"); setProfileOpen(false); }}
+                                                className="w-full text-left rounded-md px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                                            >
+                                                Dashboard
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={async () => { await logout(); setProfileOpen(false); navigate("/"); }}
+                                            className="w-full text-left rounded-md px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <Link
+                                to="/login"
+                                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                            >
+                                Admin
+                            </Link>
+                        )}
 
                         <button
                             onClick={() => setMobileOpen(true)}
@@ -318,13 +365,41 @@ const Navbar = () => {
                                 <ShoppingCart className="size-4" />
                                 Cart {cartCount > 0 && `(${cartCount})`}
                             </Link>
-                            <Link
-                                to="/login"
-                                onClick={() => setMobileOpen(false)}
-                                className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                            >
-                                Admin Login
-                            </Link>
+                            {user ? (
+                                <>
+                                    <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 bg-muted/50">
+                                        <div className="flex size-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                                            {user?.name?.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
+                                            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                                        </div>
+                                    </div>
+                                    {user?.role === "admin" && (
+                                        <button
+                                            onClick={() => { navigate("/dashboard"); setMobileOpen(false); }}
+                                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                                        >
+                                            Dashboard
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={async () => { await logout(); setMobileOpen(false); navigate("/"); }}
+                                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                                    >
+                                        Logout
+                                    </button>
+                                </>
+                            ) : (
+                                <Link
+                                    to="/login"
+                                    onClick={() => setMobileOpen(false)}
+                                    className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                                >
+                                    Admin Login
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </div>

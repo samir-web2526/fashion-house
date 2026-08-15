@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { ArrowLeft } from "lucide-react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/Button";
@@ -48,7 +49,6 @@ export default function Login() {
         navigate("/dashboard");
       } else {
         toast.error("Access denied. Admin only.");
-        await fetchUser();
       }
     } catch (err) {
       const validationErrors = err.response?.data?.errors;
@@ -148,6 +148,16 @@ export default function Login() {
             </form>
           </CardContent>
         </Card>
+
+        <div className="mt-6 text-center">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Back to Home
+          </Link>
+        </div>
       </div>
     </div>
   );

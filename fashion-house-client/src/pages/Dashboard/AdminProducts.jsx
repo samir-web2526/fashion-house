@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
+import Pagination from "@/components/ui/Pagination";
 
 const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"];
 
@@ -45,11 +46,10 @@ function ProductSkeleton() {
 
 function getAllCategorySlugs(categories) {
   const slugs = [];
-  for (const parent of categories) {
-    for (const child of parent.children ?? []) {
-      for (const s of child.categories ?? []) {
-        slugs.push(s);
-      }
+  for (const cat of categories) {
+    if (cat.slug) slugs.push(cat.slug);
+    for (const child of cat.children ?? []) {
+      if (child.slug) slugs.push(child.slug);
     }
   }
   return [...new Set(slugs)];
@@ -73,6 +73,8 @@ export default function AdminProducts() {
   const [discountFilter, setDiscountFilter] = useState("");
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [sizeMeasurements, setSizeMeasurements] = useState({});
+  const [page, setPage] = useState(1);
+  const perPage = 10;
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-products"],
@@ -107,6 +109,13 @@ export default function AdminProducts() {
     return matchesSearch && matchesCategory && matchesStock && matchesDiscount;
   });
 
+  const totalPages = Math.ceil(filteredProducts.length / perPage);
+  const paginatedProducts = filteredProducts.slice((page - 1) * perPage, page * perPage);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, categoryFilter, stockFilter, discountFilter]);
+
   const {
     register,
     handleSubmit,
@@ -132,14 +141,14 @@ export default function AdminProducts() {
 
   const createMutation = useMutation({
     mutationFn: createProduct,
-    onSuccess: () => {
-      toast.success("Product created successfully");
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      setShowForm(false);
-      resetForm();
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["admin-products"] });
+      const prev = queryClient.getQueryData(["admin-products"]);
+      return { prev };
     },
-    onError: (err) => {
-      const data = err?.response?.data;
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["admin-products"], ctx.prev);
+      const data = _err?.response?.data;
       if (data?.errors && Array.isArray(data.errors)) {
         data.errors.forEach((e) => {
           const field = e.path?.[e.path.length - 1];
@@ -149,6 +158,14 @@ export default function AdminProducts() {
       } else {
         toast.error(data?.message || data?.error || "Failed to create product");
       }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    },
+    onSuccess: () => {
+      toast.success("Product created successfully");
+      setShowForm(false);
+      resetForm();
     },
   });
 
@@ -579,7 +596,7 @@ export default function AdminProducts() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredProducts.map((product) => (
+                {paginatedProducts.map((product) => (
                   <tr key={product._id} className="hover:bg-muted/30">
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
@@ -621,6 +638,11 @@ export default function AdminProducts() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+        {filteredProducts.length > perPage && (
+          <div className="border-t border-border px-5 py-3">
+            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
           </div>
         )}
       </motion.div>

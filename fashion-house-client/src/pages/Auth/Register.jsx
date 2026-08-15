@@ -13,7 +13,6 @@ import {
 import Input from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
 import { registerUser } from "@/services/auth.api";
-import fallbackLogo from "@/assets/images/logo.png";
 import useSettings from "@/hooks/useSettings";
 import { Helmet } from "react-helmet-async";
 
@@ -80,7 +79,7 @@ export default function Register() {
       <Helmet><title>{`Register | ${siteName}`}</title></Helmet>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <img src={logo || fallbackLogo} alt={siteName} className="mx-auto mb-4 h-20 w-auto dark:invert" />
+          {logo && <img src={logo} alt={siteName} className="mx-auto mb-4 h-20 w-auto dark:invert" />}
           <h1 className="text-2xl font-bold text-foreground">{siteName}</h1>
         </div>
 

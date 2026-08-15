@@ -1,16 +1,42 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AuthContext } from "./authContext";
+import { getProfile, logoutUser } from "@/services/auth.api";
 
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUser = async () => {
+    try {
+      const userData = await getProfile();
+      setUser(userData);
+      return userData;
+    } catch {
+      setUser(null);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    fetchUser().finally(() => setLoading(false));
+  }, []);
+
+  const logout = async () => {
+    try {
+      await logoutUser();
+    } catch {
+      // ignore
+    }
+    setUser(null);
+  };
 
   const info = {
     user,
     setUser,
     loading,
-    fetchUser: async () => user,
-    logout: () => setUser(null),
+    setLoading,
+    fetchUser,
+    logout,
   };
 
   return (

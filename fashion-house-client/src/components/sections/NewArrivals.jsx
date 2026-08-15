@@ -1,9 +1,9 @@
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getProducts } from "@/services/product.api";
+import { getNewArrivals } from "@/services/product.api";
 import { Skeleton } from "@/components/ui/skeleton";
 import NewArrivalsProductCard from "./NewArrivalsProductCard";
 
@@ -23,30 +23,14 @@ function NewArrivalsSkeleton() {
   );
 }
 
-function getNewArrivalProducts(products) {
-  const sorted = [...products].sort((a, b) => {
-    const dateA = new Date(a.meta?.createdAt ?? 0).getTime();
-    const dateB = new Date(b.meta?.createdAt ?? 0).getTime();
-    if (dateB !== dateA) return dateB - dateA;
-    const ratingDiff = (b.rating ?? 0) - (a.rating ?? 0);
-    if (ratingDiff !== 0) return ratingDiff;
-    return (b.discountPercentage ?? 0) - (a.discountPercentage ?? 0);
-  });
-
-  return sorted.slice(0, 12);
-}
-
 export default function NewArrivals() {
   const scrollRef = useRef(null);
   const { data, isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: () => getProducts({ limit: 1000 }),
+    queryKey: ["new-arrival-products"],
+    queryFn: getNewArrivals,
   });
 
-  const products = useMemo(() => {
-    const allProducts = data?.products ?? [];
-    return getNewArrivalProducts(allProducts);
-  }, [data]);
+  const products = data?.products ?? [];
 
   const scroll = (direction) => {
     if (scrollRef.current) {

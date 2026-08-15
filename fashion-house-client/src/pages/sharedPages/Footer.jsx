@@ -1,6 +1,5 @@
 import { Link } from "react-router";
 import { Phone, MapPin, Mail } from "lucide-react";
-import fallbackLogo from "@/assets/images/logo.png";
 import useSettings from "@/hooks/useSettings";
 import {
   FaFacebookF,
@@ -40,7 +39,7 @@ export default function Footer() {
           {/* Logo & Description */}
           <div className="space-y-4">
             <Link to="/" className="inline-block">
-              <img src={logo || fallbackLogo} alt={siteName} className="h-36 w-auto dark:invert" />
+              {logo && <img src={logo} alt={siteName} className="h-36 w-auto dark:invert" />}
             </Link>
             <p className="text-sm leading-relaxed text-muted-foreground">
               {siteName} — providing elegance & lucrative outfit items sourced both locally & globally.

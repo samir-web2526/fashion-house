@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,6 +24,7 @@ const passwordSchema = z.object({
 export default function ChangePassword() {
   const { siteName } = useSettings();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -38,8 +39,9 @@ export default function ChangePassword() {
     mutationFn: changePassword,
     onSuccess: () => {
       toast.success("Password changed successfully");
+      queryClient.refetchQueries({ queryKey: ["admin-users"] });
       reset();
-      navigate("/profile");
+      navigate("/dashboard/admin-profile");
     },
     onError: (err) => {
       toast.error(err?.response?.data?.message || "Failed to change password");

@@ -59,13 +59,27 @@ export default function AdminOrderDetails() {
 
   const statusMutation = useMutation({
     mutationFn: ({ orderStatus }) => updateOrderStatus(id, orderStatus),
-    onSuccess: () => {
-      toast.success("Order status updated");
+    onMutate: async ({ orderStatus }) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-order", id] });
+      await queryClient.cancelQueries({ queryKey: ["admin-orders"] });
+      const prevDetail = queryClient.getQueryData(["admin-order", id]);
+      const prevList = queryClient.getQueryData(["admin-orders"]);
+      queryClient.setQueryData(["admin-order", id], (old) =>
+        old ? { ...old, orderStatus } : old
+      );
+      return { prevDetail, prevList };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prevDetail) queryClient.setQueryData(["admin-order", id], ctx.prevDetail);
+      if (ctx?.prevList) queryClient.setQueryData(["admin-orders"], ctx.prevList);
+      toast.error("Failed to update status");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-order", id] });
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
     },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to update status");
+    onSuccess: () => {
+      toast.success("Order status updated");
     },
   });
 

@@ -5,7 +5,10 @@ const {
     getAllProducts,
     getSingleProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    getFlashSaleProducts,
+    getBestSellingProducts,
+    getNewArrivals
 } = require("../controllers/products.controller");
 
 const validate = require("../middlewares/validate");
@@ -18,6 +21,12 @@ const {
 } = require("../validations/product.validation");
 
 const router = express.Router();
+
+router.get("/flash-sale", getFlashSaleProducts);
+
+router.get("/best-sellers", getBestSellingProducts);
+
+router.get("/new-arrivals", getNewArrivals);
 
 router.post(
     "/",

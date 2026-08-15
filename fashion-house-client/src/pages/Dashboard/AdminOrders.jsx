@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { motion } from "framer-motion";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
+import Pagination from "@/components/ui/Pagination";
 
 const statusOptions = [
   "pending",
@@ -32,38 +33,43 @@ export default function AdminOrders() {
   const { siteName } = useSettings();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const perPage = 10;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-orders"],
+    queryKey: ["admin-orders", page, statusFilter],
     queryFn: async () => {
-      const res = await getAllOrders();
-      return Array.isArray(res) ? res : res.orders ?? [];
+      const res = await getAllOrders({ page, limit: perPage, status: statusFilter });
+      return res;
     },
   });
 
-  const orders = Array.isArray(data) ? data : [];
+  const orders = data?.orders ?? [];
+  const totalOrders = data?.totalOrders ?? 0;
+  const totalPages = data?.totalPages ?? 1;
+
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter]);
 
   const statusMutation = useMutation({
     mutationFn: ({ id, orderStatus }) => updateOrderStatus(id, orderStatus),
-    onSuccess: () => {
-      toast.success("Order status updated");
+    onMutate: async ({ id, orderStatus }) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-orders"] });
+      const prev = queryClient.getQueryData(["admin-orders"]);
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["admin-orders"], ctx.prev);
+      toast.error("Failed to update status");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
     },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to update status");
+    onSuccess: () => {
+      toast.success("Order status updated");
     },
   });
-
-  const filteredOrders =
-    statusFilter === "all"
-      ? orders
-      : orders.filter((o) => o.orderStatus === statusFilter);
-
-  const statusCounts = orders.reduce((acc, o) => {
-    const s = o.orderStatus || "pending";
-    acc[s] = (acc[s] || 0) + 1;
-    return acc;
-  }, {});
 
   const formatDate = (d) =>
     new Date(d).toLocaleDateString("en-US", {
@@ -82,7 +88,7 @@ export default function AdminOrders() {
       </Helmet>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Orders ({filteredOrders.length})
+          Orders ({totalOrders})
         </h1>
       </div>
 
@@ -95,7 +101,7 @@ export default function AdminOrders() {
               : "border-border bg-card text-muted-foreground hover:bg-muted"
           }`}
         >
-          All ({orders.length})
+          All
         </button>
         {statusOptions.map((status) => (
           <button
@@ -108,7 +114,6 @@ export default function AdminOrders() {
             }`}
           >
             {formatStatus(status)}
-            {statusCounts[status] ? ` (${statusCounts[status]})` : ""}
           </button>
         ))}
       </div>
@@ -119,7 +124,7 @@ export default function AdminOrders() {
             <Skeleton key={i} className="h-16 w-full rounded-xl" />
           ))}
         </div>
-      ) : filteredOrders.length === 0 ? (
+      ) : orders.length === 0 ? (
         <div className="rounded-xl border border-border bg-card py-20 text-center">
           <Package className="mx-auto size-12 text-muted-foreground/30" />
           <p className="mt-3 text-sm text-muted-foreground">No orders found.</p>
@@ -140,7 +145,7 @@ export default function AdminOrders() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredOrders.map((order, i) => (
+              {orders.map((order, i) => (
                 <motion.tr
                   key={order._id}
                   initial={{ opacity: 0 }}
@@ -209,6 +214,9 @@ export default function AdminOrders() {
             </tbody>
           </table>
         </div>
+      )}
+      {totalOrders > perPage && (
+        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       )}
     </div>
   );

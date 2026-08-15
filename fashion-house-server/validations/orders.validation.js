@@ -13,6 +13,7 @@ const createOrderSchema = z.object({
     shippingAddress: z.object({
         fullName: z.string().min(2, "Full name is required"),
         phone: z.string().min(11, "Phone number is required"),
+        email: z.string().email("Invalid email address").optional().or(z.literal("")),
         address: z.string().min(5, "Address is required"),
         city: z.string().min(2, "City is required")
     })
@@ -37,6 +38,7 @@ const createGuestOrderSchema = z.object({
     shippingAddress: z.object({
         fullName: z.string().min(2, "Full name is required"),
         phone: z.string().min(11, "Phone number is required"),
+        email: z.string().email("Invalid email address").optional().or(z.literal("")),
         address: z.string().min(5, "Address is required"),
         city: z.string().min(2, "City is required")
     })

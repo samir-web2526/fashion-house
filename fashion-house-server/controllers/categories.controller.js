@@ -36,12 +36,45 @@ const getAllCategories = async (req, res) => {
         const db = getDB();
         const categoriesCollection = db.collection("categories");
 
-        const categories = await categoriesCollection.find({}).toArray();
+        const page = req.query.page ? parseInt(req.query.page) : null;
+        const limit = req.query.limit ? parseInt(req.query.limit) : null;
+        const search = req.query.search || "";
 
-        res.send(categories);
+        const query = {};
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { slug: { $regex: search, $options: "i" } }
+            ];
+        }
+
+        if (page && limit) {
+            const skip = (page - 1) * limit;
+            const totalCategories = await categoriesCollection.countDocuments(query);
+
+            const categories = await categoriesCollection
+                .find(query)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .toArray();
+
+            res.send({
+                totalCategories,
+                currentPage: page,
+                totalPages: Math.ceil(totalCategories / limit),
+                categories
+            });
+        } else {
+            const categories = await categoriesCollection
+                .find(query)
+                .sort({ createdAt: -1 })
+                .toArray();
+
+            res.send(categories);
+        }
 
     } catch (error) {
-        console.log(error);
 
         res.status(500).send({
             message: "Internal Server Error"

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { useMutation} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,6 +24,7 @@ export default function Profile() {
   const { siteName } = useSettings();
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const {
     register,
@@ -44,6 +45,7 @@ export default function Profile() {
     onSuccess: (res, variables) => {
       toast.success("Profile updated successfully");
       setUser((prev) => ({ ...prev, ...variables }));
+      queryClient.refetchQueries({ queryKey: ["admin-users"] });
       reset(variables);
     },
     onError: (err) => {
@@ -150,7 +152,7 @@ export default function Profile() {
           <Button
             variant="ghost"
             className="mt-4 w-full justify-start"
-            onClick={() => navigate("/change-password")}
+            onClick={() => navigate("/dashboard/change-password")}
           >
             <Lock className="size-4" data-icon="inline-start" />
             Change Password

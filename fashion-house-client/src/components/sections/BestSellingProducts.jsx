@@ -1,7 +1,6 @@
-import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { getProducts } from "@/services/product.api";
+import { getBestSellingProducts } from "@/services/product.api";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductCard from "./ProductCard";
 
@@ -27,41 +26,11 @@ function BestSellingSkeleton() {
 
 export default function BestSellingProducts() {
   const { data, isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: () => getProducts({ limit: 1000 }),
+    queryKey: ["best-seller-products"],
+    queryFn: getBestSellingProducts,
   });
 
-  const bestSellingProducts = useMemo(() => {
-    const products = data?.products ?? [];
-
-    const sorted = [...products].sort((a, b) => {
-      const soldA = a.sold ?? 0;
-      const soldB = b.sold ?? 0;
-      if (soldB !== soldA) return soldB - soldA;
-      const reviewA = a.reviews?.length ?? 0;
-      const reviewB = b.reviews?.length ?? 0;
-      if (reviewB !== reviewA) return reviewB - reviewA;
-      return (b.rating ?? 0) - (a.rating ?? 0);
-    });
-
-    const top = sorted.slice(0, 8);
-    if (top.length === 0) return [];
-
-    const maxSold = Math.max(...top.map((p) => p.sold ?? 0));
-    const maxRating = Math.max(...top.map((p) => p.rating ?? 0));
-
-    return top.map((product) => {
-      let badge = null;
-
-      if ((product.sold ?? 0) === maxSold && maxSold > 0) {
-        badge = "best-seller";
-      } else if ((product.rating ?? 0) === maxRating && maxRating > 0) {
-        badge = "top-rated";
-      }
-
-      return { ...product, badge };
-    });
-  }, [data]);
+  const bestSellingProducts = data?.products ?? [];
 
   return (
     <section id="best-selling" className="bg-background pb-16 pt-6 sm:pb-20 sm:pt-8">

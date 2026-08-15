@@ -68,43 +68,70 @@ export default function AdminBanners() {
 
   const createMutation = useMutation({
     mutationFn: createBanner,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["admin-banners"] });
+      const prev = queryClient.getQueryData(["admin-banners"]);
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["admin-banners"], ctx.prev);
+      toast.error("Failed to create banner");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
+    },
     onSuccess: () => {
       toast.success("Banner created");
-      queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
       setShowForm(false);
       resetCreate();
       setCreateImage("");
       setCreatePreview("");
     },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to create banner");
-    },
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }) => updateBanner(id, payload),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["admin-banners"] });
+      const prev = queryClient.getQueryData(["admin-banners"]);
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["admin-banners"], ctx.prev);
+      toast.error("Failed to update banner");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
+    },
     onSuccess: () => {
       toast.success("Banner updated");
-      queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
       setEditingId(null);
       resetUpdate();
       setEditImage("");
       setEditPreview("");
     },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to update banner");
-    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteBanner,
+    onMutate: async (deletedId) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-banners"] });
+      const prev = queryClient.getQueryData(["admin-banners"]);
+      queryClient.setQueryData(["admin-banners"], (old) =>
+        Array.isArray(old) ? old.filter((b) => b._id !== deletedId) : old
+      );
+      return { prev };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(["admin-banners"], ctx.prev);
+      toast.error("Failed to delete banner");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
+    },
     onSuccess: () => {
       toast.success("Banner deleted");
-      queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
       setDeletingId(null);
-    },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to delete banner");
     },
   });
 
@@ -255,7 +282,7 @@ export default function AdminBanners() {
                       <button
                         type="button"
                         onClick={() => { setCreateImage(""); setCreatePreview(""); }}
-                        className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-black/60 text-white"
+                        className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600"
                       >
                         <Trash2 className="size-3" />
                       </button>
@@ -333,15 +360,15 @@ export default function AdminBanners() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-gray-700 hover:bg-gray-100 hover:text-gray-800"
+                              className="text-red-500 hover:bg-red-50 hover:text-red-600"
                               disabled={editingId !== null}
                               onClick={() => setDeletingId(banner._id)}
                             >
                               <Trash2 className="size-4" />
                             </Button>
                           ) : (
-                            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-100 px-3 py-1.5">
-                              <span className="text-xs text-gray-800">Delete?</span>
+                            <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5">
+                              <span className="text-xs text-red-700">Delete?</span>
                               <Button
                                 variant="destructive"
                                 size="sm"
@@ -412,7 +439,7 @@ export default function AdminBanners() {
                             <button
                               type="button"
                               onClick={() => { setEditImage(""); setEditPreview(""); }}
-                              className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-black/60 text-white"
+                              className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600"
                             >
                               <Trash2 className="size-3" />
                             </button>

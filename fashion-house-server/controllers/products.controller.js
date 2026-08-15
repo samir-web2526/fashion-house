@@ -135,12 +135,12 @@ const getAllProducts = async (req, res) => {
             query.brand = brand;
         }
 
-        let sortOption = {};
+        let sortOption = { "meta.createdAt": -1 };
 
         if (sort === "asc") {
-            sortOption.price = 1;
+            sortOption = { price: 1 };
         } else if (sort === "desc") {
-            sortOption.price = -1;
+            sortOption = { price: -1 };
         }
 
         const totalProducts = await productsCollection.countDocuments(query);
@@ -270,10 +270,151 @@ const deleteProduct = async (req, res) => {
     }
 };
 
+const getFlashSaleProducts = async (req, res) => {
+    try {
+        const db = getDB();
+        const productsCollection = db.collection("products");
+
+        const products = await productsCollection
+            .aggregate([
+                {
+                    $match: {
+                        discountPercentage: { $gt: 60 },
+                        stock: { $gt: 0 }
+                    }
+                },
+                {
+                    $sort: {
+                        discountPercentage: -1,
+                        stock: -1
+                    }
+                },
+                {
+                    $limit: 8
+                }
+            ])
+            .toArray();
+
+        const maxStockResult = await productsCollection
+            .aggregate([
+                {
+                    $match: {
+                        discountPercentage: { $gt: 60 },
+                        stock: { $gt: 0 }
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        maxStock: { $max: "$stock" }
+                    }
+                }
+            ])
+            .toArray();
+
+        const maxStock = maxStockResult.length > 0 ? maxStockResult[0].maxStock : 1;
+
+        res.send({ products, maxStock });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
+const getBestSellingProducts = async (req, res) => {
+    try {
+        const db = getDB();
+        const productsCollection = db.collection("products");
+        const ordersCollection = db.collection("orders");
+
+        const products = await ordersCollection
+            .aggregate([
+                { $unwind: "$items" },
+                {
+                    $group: {
+                        _id: "$items.productId",
+                        totalSold: { $sum: "$items.quantity" }
+                    }
+                },
+                { $sort: { totalSold: -1 } },
+                { $limit: 8 },
+                {
+                    $lookup: {
+                        from: "products",
+                        localField: "_id",
+                        foreignField: "_id",
+                        as: "product"
+                    }
+                },
+                { $unwind: "$product" },
+                {
+                    $replaceRoot: {
+                        newRoot: {
+                            $mergeObjects: ["$product", { totalSold: "$totalSold" }]
+                        }
+                    }
+                }
+            ])
+            .toArray();
+
+        const maxSold = products.length > 0
+            ? Math.max(...products.map(p => p.totalSold ?? 0))
+            : 0;
+        const maxRating = products.length > 0
+            ? Math.max(...products.map(p => p.rating ?? 0))
+            : 0;
+
+        const result = products.map(product => {
+            let badge = null;
+            if ((product.totalSold ?? 0) === maxSold && maxSold > 0) {
+                badge = "best-seller";
+            } else if ((product.rating ?? 0) === maxRating && maxRating > 0) {
+                badge = "top-rated";
+            }
+            return { ...product, badge };
+        });
+
+        res.send({ products: result });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
+const getNewArrivals = async (req, res) => {
+    try {
+        const db = getDB();
+        const productsCollection = db.collection("products");
+
+        const products = await productsCollection
+            .aggregate([
+                {
+                    $sort: {
+                        "meta.createdAt": -1,
+                        rating: -1,
+                        discountPercentage: -1
+                    }
+                },
+                {
+                    $limit: 12
+                }
+            ])
+            .toArray();
+
+        res.send({ products });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
 module.exports = {
     createProduct,
     getAllProducts,
     getSingleProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    getFlashSaleProducts,
+    getBestSellingProducts,
+    getNewArrivals
 };
