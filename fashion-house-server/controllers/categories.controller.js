@@ -31,6 +31,37 @@ const createCategory = async (req, res) => {
     }
 };
 
+const getCategoriesWithCounts = async (req, res) => {
+    try {
+        const db = getDB();
+        const categoriesCollection = db.collection("categories");
+        const productsCollection = db.collection("products");
+
+        const categories = await categoriesCollection.find().sort({ createdAt: -1 }).toArray();
+
+        const countResult = await productsCollection.aggregate([
+            { $group: { _id: "$category", count: { $sum: 1 } } }
+        ]).toArray();
+
+        const countMap = new Map(countResult.map(r => [r._id, r.count]));
+
+        const categoriesWithCounts = categories.map(parent => {
+            let totalCount = 0;
+            for (const child of parent.children ?? []) {
+                for (const catSlug of child.categories ?? []) {
+                    totalCount += countMap.get(catSlug) ?? 0;
+                }
+            }
+            return { ...parent, productCount: totalCount };
+        });
+
+        res.send(categoriesWithCounts);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
 const getAllCategories = async (req, res) => {
     try {
         const db = getDB();
@@ -199,6 +230,7 @@ const deleteCategory = async (req, res) => {
 module.exports = {
     createCategory,
     getAllCategories,
+    getCategoriesWithCounts,
     getSingleCategory,
     updateCategory,
     deleteCategory

@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatBDT } from "@/utils/currency";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
+import { useAuth } from "@/hooks/useAuth";
 
 
 
@@ -47,6 +48,8 @@ export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useAddToCart();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -204,7 +207,7 @@ export default function ProductDetails() {
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
-                    className={`size-12 overflow-hidden border-2 transition-colors ${i === selectedImage ? "border-black" : "border-border"
+                    className={`size-12 overflow-hidden border-2 transition-colors ${i === selectedImage ? "border-foreground" : "border-border"
                       }`}
                   >
                     <img src={img} alt="Color Option" className="h-full w-full object-cover" />
@@ -220,7 +223,7 @@ export default function ProductDetails() {
                   <span className="text-sm font-bold text-foreground">
                     Select Size :
                   </span>
-                  <button className="rounded bg-black px-3 py-1.5 text-xs font-semibold text-white">
+                  <button className="rounded bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
                     Size Chart
                   </button>
                 </div>
@@ -230,8 +233,8 @@ export default function ProductDetails() {
                       key={size}
                       onClick={() => setSelectedSize(size)}
                       className={`min-w-10 border px-3 py-1.5 text-sm font-medium transition-colors ${selectedSize === size
-                        ? "border-black text-black"
-                        : "border-border bg-background text-foreground hover:border-black hover:text-black"
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border bg-background text-foreground hover:border-foreground/50"
                         }`}
                     >
                       {size}
@@ -265,14 +268,16 @@ export default function ProductDetails() {
                   </button>
                 </div>
 
-                <Button
-                  size="lg"
-                  className="flex-1 rounded bg-black text-white hover:bg-gray-800 text-base font-bold"
-                  disabled={product.stock === 0}
-                  onClick={handleAddToCart}
-                >
-                  অর্ডার করুন
-                </Button>
+                {!isAdmin && (
+                  <Button
+                    size="lg"
+                    className="flex-1 rounded bg-primary text-primary-foreground hover:bg-primary/90 text-base font-bold"
+                    disabled={product.stock === 0}
+                    onClick={handleAddToCart}
+                  >
+                    অর্ডার করুন
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -292,7 +297,7 @@ export default function ProductDetails() {
                 href={`https://www.facebook.com/sharer/sharer.php?u=${window.location.href}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex size-8 items-center justify-center rounded-full bg-black text-white transition-opacity hover:opacity-90"
+                className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
               >
                 <svg className="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
               </a>
@@ -300,7 +305,7 @@ export default function ProductDetails() {
                 href={`https://twitter.com/intent/tweet?text=${product.title}&url=${window.location.href}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex size-8 items-center justify-center rounded-full bg-black text-white transition-opacity hover:opacity-90"
+                className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
               >
                 <svg className="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
               </a>
@@ -308,7 +313,7 @@ export default function ProductDetails() {
                 href={`https://instagram.com`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex size-8 items-center justify-center rounded-full bg-black text-white transition-opacity hover:opacity-90"
+                className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90"
               >
                 <svg className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
               </a>
@@ -318,7 +323,7 @@ export default function ProductDetails() {
           {/* Right - Extra Info lg:w-[30%] */}
           <div className="flex flex-col gap-4 lg:w-[30%]">
             {/* Policies */}
-            <div className="rounded border-2 border-dashed border-black p-4 text-xs font-medium text-foreground">
+            <div className="rounded border-2 border-dashed border-foreground p-4 text-xs font-medium text-foreground">
               <ul className="space-y-3">
                 <li className="flex items-start gap-2">
                   <svg className="mt-0.5 size-3 shrink-0 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
@@ -334,7 +339,7 @@ export default function ProductDetails() {
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="mt-0.5 size-3 shrink-0 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                   <span>24/7 কাস্টমার সাপোর্ট: <a href="/orders" className="text-black hover:underline">Order Tracking</a></span>
+                   <span>24/7 কাস্টমার সাপোর্ট: <a href="/orders" className="text-foreground hover:underline">Order Tracking</a></span>
                 </li>
               </ul>
             </div>

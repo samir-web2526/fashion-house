@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation} from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,7 +24,6 @@ export default function Profile() {
   const { siteName } = useSettings();
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const {
     register,
@@ -45,7 +44,6 @@ export default function Profile() {
     onSuccess: (res, variables) => {
       toast.success("Profile updated successfully");
       setUser((prev) => ({ ...prev, ...variables }));
-      queryClient.refetchQueries({ queryKey: ["admin-users"] });
       reset(variables);
     },
     onError: (err) => {

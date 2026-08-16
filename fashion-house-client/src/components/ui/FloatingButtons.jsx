@@ -29,7 +29,7 @@ export default function FloatingButtons() {
         href="https://wa.me/+8801940005000"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-20 right-6 z-9999 flex h-10 w-10 items-center justify-center rounded-full bg-black text-white shadow-lg transition-transform hover:scale-110 sm:h-14 sm:w-14"
+        className="fixed bottom-20 right-6 z-9999 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 sm:h-14 sm:w-14"
       >
         <FaWhatsapp className="text-lg sm:text-2xl" />
       </a>
@@ -37,7 +37,7 @@ export default function FloatingButtons() {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-36 right-6 z-9999 flex h-10 w-10 items-center justify-center rounded-full bg-black text-white shadow-lg transition-transform hover:scale-110 sm:h-14 sm:w-14"
+          className="fixed bottom-36 right-6 z-9999 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-110 sm:h-14 sm:w-14"
         >
           <FaArrowUp className="text-lg sm:text-2xl" />
         </button>

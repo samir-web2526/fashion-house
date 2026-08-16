@@ -11,21 +11,6 @@ export const getProductById = async (id) => {
   return data;
 };
 
-export const getFlashSaleProducts = async () => {
-  const { data } = await axiosPublic.get("/products/flash-sale");
-  return data;
-};
-
-export const getBestSellingProducts = async () => {
-  const { data } = await axiosPublic.get("/products/best-sellers");
-  return data;
-};
-
-export const getNewArrivals = async () => {
-  const { data } = await axiosPublic.get("/products/new-arrivals");
-  return data;
-};
-
 export const createProduct = async (payload) => {
   const { data } = await axiosSecure.post("/products", payload);
   return data;

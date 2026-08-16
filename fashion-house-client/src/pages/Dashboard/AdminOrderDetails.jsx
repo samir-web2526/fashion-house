@@ -59,27 +59,13 @@ export default function AdminOrderDetails() {
 
   const statusMutation = useMutation({
     mutationFn: ({ orderStatus }) => updateOrderStatus(id, orderStatus),
-    onMutate: async ({ orderStatus }) => {
-      await queryClient.cancelQueries({ queryKey: ["admin-order", id] });
-      await queryClient.cancelQueries({ queryKey: ["admin-orders"] });
-      const prevDetail = queryClient.getQueryData(["admin-order", id]);
-      const prevList = queryClient.getQueryData(["admin-orders"]);
-      queryClient.setQueryData(["admin-order", id], (old) =>
-        old ? { ...old, orderStatus } : old
-      );
-      return { prevDetail, prevList };
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prevDetail) queryClient.setQueryData(["admin-order", id], ctx.prevDetail);
-      if (ctx?.prevList) queryClient.setQueryData(["admin-orders"], ctx.prevList);
-      toast.error("Failed to update status");
-    },
-    onSettled: () => {
+    onSuccess: () => {
+      toast.success("Order status updated");
       queryClient.invalidateQueries({ queryKey: ["admin-order", id] });
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
     },
-    onSuccess: () => {
-      toast.success("Order status updated");
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to update status");
     },
   });
 
@@ -141,7 +127,7 @@ export default function AdminOrderDetails() {
                   statusMutation.mutate({ orderStatus: e.target.value })
                 }
                 className={`appearance-none rounded-full border px-3 py-1.5 pr-8 text-sm font-medium ${
-                  statusColors[order.orderStatus] || "bg-gray-100 text-gray-800"
+                  statusColors[order.orderStatus] || "bg-muted text-foreground"
                 } cursor-pointer focus:outline-none`}
               >
                 {statusOptions.map((s) => (
@@ -188,7 +174,7 @@ export default function AdminOrderDetails() {
         )}
 
         {order.orderStatus === "cancelled" && (
-          <div className="mb-8 rounded-xl border border-gray-200 bg-gray-100 p-4 text-sm text-gray-800">
+          <div className="mb-8 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
             This order has been cancelled.
           </div>
         )}

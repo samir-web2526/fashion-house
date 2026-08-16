@@ -1,10 +1,12 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Users, Shield, User } from "lucide-react";
+import { Users, Shield, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
 import { getUsers } from "@/services/user.api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/Button";
 
 function formatDate(d) {
   if (!d) return "";
@@ -17,12 +19,17 @@ function formatDate(d) {
 
 export default function AdminUsers() {
   const { siteName } = useSettings();
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: getUsers,
   });
 
   const users = data?.users ?? data ?? [];
+  const totalPages = Math.ceil(users.length / limit);
+  const paginatedUsers = users.slice((page - 1) * limit, page * limit);
 
   return (
     <div className="space-y-6">
@@ -60,7 +67,7 @@ export default function AdminUsers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {users.map((user, i) => (
+              {paginatedUsers.map((user, i) => (
                 <motion.tr
                   key={user._id}
                   initial={{ opacity: 0 }}
@@ -103,6 +110,35 @@ export default function AdminUsers() {
               ))}
             </tbody>
           </table>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-border px-4 py-3">
+              <p className="text-sm text-muted-foreground">
+                Showing {((page - 1) * limit) + 1}-{Math.min(page * limit, users.length)} of {users.length}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

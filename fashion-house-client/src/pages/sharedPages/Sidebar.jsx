@@ -30,7 +30,7 @@ export default function Sidebar({ open, onClose }) {
     },
     {
       name: "Profile",
-      path: "/dashboard/admin-profile",
+      path: "/dashboard/profile",
     },
     {
       name: "Home",
@@ -52,7 +52,7 @@ export default function Sidebar({ open, onClose }) {
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {logo && <img src={logo} alt={siteName} className="mb-6 h-16 w-auto dark:invert" />}
+        <img src={logo} alt={siteName} className="mb-6 h-16 w-auto dark:invert" />
 
         <nav className="space-y-2">
           {menuItems.map((item) => (

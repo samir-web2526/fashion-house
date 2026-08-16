@@ -1,8 +1,8 @@
 import axiosPublic from "../utils/axiosPublic";
 import axiosSecure from "../utils/axiosSecure";
 
-export const getCategories = async (params = {}) => {
-  const { data } = await axiosPublic.get("/categories", { params });
+export const getCategories = async () => {
+  const { data } = await axiosPublic.get("/categories");
   return data;
 };
 

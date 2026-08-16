@@ -136,17 +136,13 @@ export default function AdminProductDetails() {
 
   const updateMutation = useMutation({
     mutationFn: (payload) => updateProduct(id, payload),
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["admin-product", id] });
-      await queryClient.cancelQueries({ queryKey: ["admin-products"] });
-      const prevDetail = queryClient.getQueryData(["admin-product", id]);
-      const prevList = queryClient.getQueryData(["admin-products"]);
-      return { prevDetail, prevList };
+    onSuccess: () => {
+      toast.success("Product updated");
+      queryClient.invalidateQueries({ queryKey: ["admin-product", id] });
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prevDetail) queryClient.setQueryData(["admin-product", id], ctx.prevDetail);
-      if (ctx?.prevList) queryClient.setQueryData(["admin-products"], ctx.prevList);
-      const data = _err?.response?.data;
+    onError: (err) => {
+      const data = err?.response?.data;
       if (data?.errors && Array.isArray(data.errors)) {
         data.errors.forEach((e) => {
           const field = e.path?.[e.path.length - 1];
@@ -157,38 +153,17 @@ export default function AdminProductDetails() {
         toast.error(data?.message || data?.error || "Failed to update product");
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-product", id] });
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-    },
-    onSuccess: () => {
-      toast.success("Product updated");
-    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
-    onMutate: async (deletedId) => {
-      await queryClient.cancelQueries({ queryKey: ["admin-products"] });
-      const prev = queryClient.getQueryData(["admin-products"]);
-      queryClient.setQueryData(["admin-products"], (old) => {
-        if (!old) return old;
-        const products = old.products ?? old;
-        const updated = Array.isArray(products) ? products.filter((p) => p._id !== deletedId) : products;
-        return old.products !== undefined ? { ...old, products: updated } : updated;
-      });
-      return { prev };
-    },
-    onError: (_err, _id, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(["admin-products"], ctx.prev);
-      toast.error("Failed to delete product");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-    },
     onSuccess: () => {
       toast.success("Product deleted");
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       navigate("/dashboard/products");
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to delete product");
     },
   });
 
@@ -310,15 +285,15 @@ export default function AdminProductDetails() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground"
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 <Trash2 className="size-4" data-icon="inline-start" />
                 Delete
               </Button>
             ) : (
-              <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
-                <span className="text-sm text-red-700">Delete this product?</span>
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2">
+                <span className="text-sm text-foreground">Delete this product?</span>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -359,8 +334,8 @@ export default function AdminProductDetails() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label className="mb-1 block text-sm font-medium text-foreground">Title</label>
-                <Input {...register("title")} placeholder="Product title" className={errors.title ? "border-gray-500" : ""} />
-                {errors.title && <p className="mt-1 text-xs text-gray-600">{errors.title.message}</p>}
+                <Input {...register("title")} placeholder="Product title" className={errors.title ? "border-destructive" : ""} />
+                {errors.title && <p className="mt-1 text-xs text-destructive">{errors.title.message}</p>}
               </div>
 
               <div className="sm:col-span-2">
@@ -369,23 +344,23 @@ export default function AdminProductDetails() {
                   {...register("description")}
                   rows={4}
                   placeholder="Product description"
-                  className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring ${errors.description ? "border-gray-500" : ""}`}
+                  className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring ${errors.description ? "border-destructive" : ""}`}
                 />
-                {errors.description && <p className="mt-1 text-xs text-gray-600">{errors.description.message}</p>}
+                {errors.description && <p className="mt-1 text-xs text-destructive">{errors.description.message}</p>}
               </div>
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">Category</label>
                 <select
                   {...register("category")}
-                  className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring ${errors.category ? "border-gray-500" : ""}`}
+                  className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring ${errors.category ? "border-destructive" : ""}`}
                 >
                   <option value="">Select category</option>
                   {categorySlugs.map((slug) => (
                     <option key={slug} value={slug}>{slug}</option>
                   ))}
                 </select>
-                {errors.category && <p className="mt-1 text-xs text-gray-600">{errors.category.message}</p>}
+                {errors.category && <p className="mt-1 text-xs text-destructive">{errors.category.message}</p>}
               </div>
 
               <div>
@@ -443,8 +418,8 @@ export default function AdminProductDetails() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">Price in BDT</label>
-                <Input {...register("price")} type="number" step="0.01" placeholder="৳0" className={errors.price ? "border-gray-500" : ""} />
-                {errors.price && <p className="mt-1 text-xs text-gray-600">{errors.price.message}</p>}
+                <Input {...register("price")} type="number" step="0.01" placeholder="৳0" className={errors.price ? "border-destructive" : ""} />
+                {errors.price && <p className="mt-1 text-xs text-destructive">{errors.price.message}</p>}
               </div>
 
               <div>
@@ -454,8 +429,8 @@ export default function AdminProductDetails() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">Stock</label>
-                <Input {...register("stock")} type="number" min="0" placeholder="0" className={errors.stock ? "border-gray-500" : ""} />
-                {errors.stock && <p className="mt-1 text-xs text-gray-600">{errors.stock.message}</p>}
+                <Input {...register("stock")} type="number" min="0" placeholder="0" className={errors.stock ? "border-destructive" : ""} />
+                {errors.stock && <p className="mt-1 text-xs text-destructive">{errors.stock.message}</p>}
               </div>
 
               <div>

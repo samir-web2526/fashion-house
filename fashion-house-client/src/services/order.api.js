@@ -31,8 +31,8 @@ export const cancelOrder = async (id) => {
   return data;
 };
 
-export const getAllOrders = async (params = {}) => {
-  const { data } = await axiosSecure.get("/orders/all", { params });
+export const getAllOrders = async () => {
+  const { data } = await axiosSecure.get("/orders/all");
   return data;
 };
 
@@ -41,7 +41,7 @@ export const updateOrderStatus = async (id, orderStatus) => {
   return data;
 };
 
-export const sendOrderInvoice = async (orderId, email) => {
-  const { data } = await axiosPublic.post(`/orders/${orderId}/invoice`, { email });
+export const sendOrderInvoice = async (orderId) => {
+  const { data } = await axiosPublic.post(`/orders/${orderId}/invoice`);
   return data;
 };

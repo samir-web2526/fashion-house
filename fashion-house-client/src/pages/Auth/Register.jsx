@@ -79,7 +79,7 @@ export default function Register() {
       <Helmet><title>{`Register | ${siteName}`}</title></Helmet>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          {logo && <img src={logo} alt={siteName} className="mx-auto mb-4 h-20 w-auto dark:invert" />}
+          <img src={logo} alt={siteName} className="mx-auto mb-4 h-20 w-auto dark:invert" />
           <h1 className="text-2xl font-bold text-foreground">{siteName}</h1>
         </div>
 
@@ -94,7 +94,7 @@ export default function Register() {
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {serverError && (
-                <div className="rounded-lg bg-gray-100 px-4 py-3 text-sm text-gray-700 ring-1 ring-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700">
+                <div className="rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive ring-1 ring-destructive/20">
                   {serverError}
                 </div>
               )}
@@ -112,10 +112,10 @@ export default function Register() {
                       message: "Name must be at least 3 characters",
                     },
                   })}
-                  className={errors.name ? "border-gray-500 focus:border-gray-500" : ""}
+                  className={errors.name ? "border-destructive focus:border-destructive" : ""}
                 />
                 {errors.name && (
-                  <p className="text-xs text-gray-600">{errors.name.message}</p>
+                  <p className="text-xs text-destructive">{errors.name.message}</p>
                 )}
               </div>
 
@@ -132,10 +132,10 @@ export default function Register() {
                       message: "Invalid email address",
                     },
                   })}
-                  className={(errors.email) ? "border-gray-500 focus:border-gray-500" : ""}
+                  className={(errors.email) ? "border-destructive focus:border-destructive" : ""}
                 />
                 {errors.email && (
-                  <p className="text-xs text-gray-600">{errors.email.message}</p>
+                  <p className="text-xs text-destructive">{errors.email.message}</p>
                 )}
               </div>
 
@@ -152,10 +152,10 @@ export default function Register() {
                       message: "Password must be at least 6 characters",
                     },
                   })}
-                  className={errors.password ? "border-gray-500 focus:border-gray-500" : ""}
+                  className={errors.password ? "border-destructive focus:border-destructive" : ""}
                 />
                 {errors.password && (
-                  <p className="text-xs text-gray-600">{errors.password.message}</p>
+                  <p className="text-xs text-destructive">{errors.password.message}</p>
                 )}
               </div>
 
@@ -170,10 +170,10 @@ export default function Register() {
                     validate: (value) =>
                       value === password || "Passwords do not match",
                   })}
-                  className={errors.confirmPassword ? "border-gray-500 focus:border-gray-500" : ""}
+                  className={errors.confirmPassword ? "border-destructive focus:border-destructive" : ""}
                 />
                 {errors.confirmPassword && (
-                  <p className="text-xs text-gray-600">{errors.confirmPassword.message}</p>
+                  <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
                 )}
               </div>
 

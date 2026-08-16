@@ -39,7 +39,7 @@ export default function Footer() {
           {/* Logo & Description */}
           <div className="space-y-4">
             <Link to="/" className="inline-block">
-              {logo && <img src={logo} alt={siteName} className="h-36 w-auto dark:invert" />}
+              <img src={logo} alt={siteName} className="h-20 sm:h-36 w-auto dark:invert" />
             </Link>
             <p className="text-sm leading-relaxed text-muted-foreground">
               {siteName} — providing elegance & lucrative outfit items sourced both locally & globally.

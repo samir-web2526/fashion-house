@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { Plus, Eye, X, Package, Camera, ImagePlus, Search} from "lucide-react";
+import { Plus, Eye, X, Package, Camera, ImagePlus, Search, ChevronLeft, ChevronRight} from "lucide-react";
 import { Link } from "react-router";
 import { getProducts, createProduct } from "@/services/product.api";
 import { formatBDT } from "@/utils/currency";
@@ -16,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
-import Pagination from "@/components/ui/Pagination";
 
 const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"];
 
@@ -46,10 +45,11 @@ function ProductSkeleton() {
 
 function getAllCategorySlugs(categories) {
   const slugs = [];
-  for (const cat of categories) {
-    if (cat.slug) slugs.push(cat.slug);
-    for (const child of cat.children ?? []) {
-      if (child.slug) slugs.push(child.slug);
+  for (const parent of categories) {
+    for (const child of parent.children ?? []) {
+      for (const s of child.categories ?? []) {
+        slugs.push(s);
+      }
     }
   }
   return [...new Set(slugs)];
@@ -74,7 +74,7 @@ export default function AdminProducts() {
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [sizeMeasurements, setSizeMeasurements] = useState({});
   const [page, setPage] = useState(1);
-  const perPage = 10;
+  const limit = 10;
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-products"],
@@ -89,9 +89,9 @@ export default function AdminProducts() {
   const categories = categoriesData ?? [];
   const categorySlugs = getAllCategorySlugs(categories);
 
-  const products = data?.products ?? [];
+  const products = useMemo(() => data?.products ?? [], [data]);
 
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = useMemo(() => products.filter((product) => {
     const matchesSearch =
       product.title.toLowerCase().includes(search.toLowerCase()) ||
       product.brand?.toLowerCase().includes(search.toLowerCase()) ||
@@ -107,14 +107,10 @@ export default function AdminProducts() {
       (discountFilter === "with-discount" && product.discountPercentage > 0) ||
       (discountFilter === "no-discount" && product.discountPercentage === 0);
     return matchesSearch && matchesCategory && matchesStock && matchesDiscount;
-  });
+  }), [products, search, categoryFilter, stockFilter, discountFilter]);
 
-  const totalPages = Math.ceil(filteredProducts.length / perPage);
-  const paginatedProducts = filteredProducts.slice((page - 1) * perPage, page * perPage);
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, categoryFilter, stockFilter, discountFilter]);
+  const totalPages = Math.ceil(filteredProducts.length / limit);
+  const paginatedProducts = filteredProducts.slice((page - 1) * limit, page * limit);
 
   const {
     register,
@@ -141,14 +137,14 @@ export default function AdminProducts() {
 
   const createMutation = useMutation({
     mutationFn: createProduct,
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["admin-products"] });
-      const prev = queryClient.getQueryData(["admin-products"]);
-      return { prev };
+    onSuccess: () => {
+      toast.success("Product created successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      setShowForm(false);
+      resetForm();
     },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(["admin-products"], ctx.prev);
-      const data = _err?.response?.data;
+    onError: (err) => {
+      const data = err?.response?.data;
       if (data?.errors && Array.isArray(data.errors)) {
         data.errors.forEach((e) => {
           const field = e.path?.[e.path.length - 1];
@@ -158,14 +154,6 @@ export default function AdminProducts() {
       } else {
         toast.error(data?.message || data?.error || "Failed to create product");
       }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-    },
-    onSuccess: () => {
-      toast.success("Product created successfully");
-      setShowForm(false);
-      resetForm();
     },
   });
 
@@ -320,8 +308,8 @@ export default function AdminProducts() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="sm:col-span-2">
                     <label className="mb-1 block text-sm font-medium text-foreground">Title *</label>
-                    <Input {...register("title")} placeholder="Product title" className={errors.title ? "border-gray-500" : ""} />
-                    {errors.title && <p className="mt-1 text-xs text-gray-600">{errors.title.message}</p>}
+                    <Input {...register("title")} placeholder="Product title" className={errors.title ? "border-destructive" : ""} />
+                    {errors.title && <p className="mt-1 text-xs text-destructive">{errors.title.message}</p>}
                   </div>
 
                   <div className="sm:col-span-2">
@@ -330,23 +318,23 @@ export default function AdminProducts() {
                       {...register("description")}
                       rows={3}
                       placeholder="Product description"
-                      className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring ${errors.description ? "border-gray-500" : ""}`}
+                      className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring ${errors.description ? "border-destructive" : ""}`}
                     />
-                    {errors.description && <p className="mt-1 text-xs text-gray-600">{errors.description.message}</p>}
+                    {errors.description && <p className="mt-1 text-xs text-destructive">{errors.description.message}</p>}
                   </div>
 
                   <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">Category *</label>
                     <select
                       {...register("category")}
-                      className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring ${errors.category ? "border-gray-500" : ""}`}
+                      className={`w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring ${errors.category ? "border-destructive" : ""}`}
                     >
                       <option value="">Select category</option>
                       {categorySlugs.map((slug) => (
                         <option key={slug} value={slug}>{slug}</option>
                       ))}
                     </select>
-                    {errors.category && <p className="mt-1 text-xs text-gray-600">{errors.category.message}</p>}
+                    {errors.category && <p className="mt-1 text-xs text-destructive">{errors.category.message}</p>}
                   </div>
 
                   <div>
@@ -404,8 +392,8 @@ export default function AdminProducts() {
 
                   <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">Price in BDT *</label>
-                    <Input {...register("price")} type="number" step="0.01" placeholder="৳0" className={errors.price ? "border-gray-500" : ""} />
-                    {errors.price && <p className="mt-1 text-xs text-gray-600">{errors.price.message}</p>}
+                    <Input {...register("price")} type="number" step="0.01" placeholder="৳0" className={errors.price ? "border-destructive" : ""} />
+                    {errors.price && <p className="mt-1 text-xs text-destructive">{errors.price.message}</p>}
                   </div>
 
                   <div>
@@ -415,8 +403,8 @@ export default function AdminProducts() {
 
                   <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">Stock *</label>
-                    <Input {...register("stock")} type="number" min="0" placeholder="0" className={errors.stock ? "border-gray-500" : ""} />
-                    {errors.stock && <p className="mt-1 text-xs text-gray-600">{errors.stock.message}</p>}
+                    <Input {...register("stock")} type="number" min="0" placeholder="0" className={errors.stock ? "border-destructive" : ""} />
+                    {errors.stock && <p className="mt-1 text-xs text-destructive">{errors.stock.message}</p>}
                   </div>
 
                   <div className="sm:col-span-2">
@@ -638,11 +626,35 @@ export default function AdminProducts() {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-        {filteredProducts.length > perPage && (
-          <div className="border-t border-border px-5 py-3">
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-border px-5 py-3">
+                <p className="text-sm text-muted-foreground">
+                  Showing {((page - 1) * limit) + 1}-{Math.min(page * limit, filteredProducts.length)} of {filteredProducts.length}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    <ChevronLeft className="size-4" />
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {page} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    <ChevronRight className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </motion.div>

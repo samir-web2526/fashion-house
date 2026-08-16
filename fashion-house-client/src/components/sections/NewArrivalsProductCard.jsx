@@ -3,9 +3,12 @@ import { Link } from "react-router";
 import { motion } from "framer-motion";
 import { formatBDT } from "@/utils/currency";
 import OrderModal from "@/components/ui/OrderModal";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function NewArrivalsProductCard({ product, index }) {
   const [showModal, setShowModal] = useState(false);
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const hasDiscount = product.discountPercentage > 0;
   const discountedPrice = hasDiscount
     ? (product.price * (1 - product.discountPercentage / 100)).toFixed(2)
@@ -66,23 +69,27 @@ export default function NewArrivalsProductCard({ product, index }) {
             </div>
           </div>
 
-          <div className="px-2 pb-2">
-            <button
-              disabled={isOutOfStock}
-              onClick={() => setShowModal(true)}
-              className="w-full rounded bg-foreground py-1.5 text-[11px] font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
-            >
-              {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
-            </button>
-          </div>
+          {!isAdmin && (
+            <div className="px-2 pb-2">
+              <button
+                disabled={isOutOfStock}
+                onClick={() => setShowModal(true)}
+                className="w-full rounded bg-foreground py-1.5 text-[11px] font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
+              >
+                {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
+              </button>
+            </div>
+          )}
         </div>
       </motion.div>
 
-      <OrderModal
-        product={product}
-        open={showModal}
-        onClose={() => setShowModal(false)}
-      />
+      {!isAdmin && (
+        <OrderModal
+          product={product}
+          open={showModal}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </>
   );
 }

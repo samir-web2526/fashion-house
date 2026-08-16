@@ -1,18 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { Plus, Trash2, X, FolderTree, ChevronRight, Pencil, Save, Upload, Search} from "lucide-react";
+import { Plus, Trash2, X, FolderTree, ChevronRight, Pencil, Save, Upload} from "lucide-react";
 import { getCategories, createCategory, updateCategory, deleteCategory } from "@/services/category.api";
 import { Button } from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
-import Pagination from "@/components/ui/Pagination";
 
 const createCategorySchema = z.object({
   name: z.string().min(2, "Category name is required"),
@@ -58,22 +57,13 @@ export default function AdminCategories() {
   const [deletingId, setDeletingId] = useState(null);
   const [createImage, setCreateImage] = useState("");
   const [editImage, setEditImage] = useState("");
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const perPage = 10;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-categories", page, search],
-    queryFn: () => getCategories({ page, limit: perPage, search }),
+    queryKey: ["admin-categories"],
+    queryFn: getCategories,
   });
 
-  const categories = Array.isArray(data) ? data : data?.categories ?? [];
-  const totalCategories = Array.isArray(data) ? data.length : data?.totalCategories ?? 0;
-  const totalPages = Array.isArray(data) ? 1 : data?.totalPages ?? 1;
-
-  useEffect(() => {
-    setPage(1);
-  }, [search]);
+  const categories = data ?? [];
 
   const {
     register: regCreate,
@@ -110,14 +100,14 @@ export default function AdminCategories() {
 
   const createMutation = useMutation({
     mutationFn: createCategory,
-    onMutate: async (newCategory) => {
-      await queryClient.cancelQueries({ queryKey: ["admin-categories"] });
-      const prev = queryClient.getQueryData(["admin-categories"]);
-      return { prev };
+    onSuccess: () => {
+      toast.success("Category created");
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+      setShowForm(false);
+      resetCreate();
     },
-    onError: (_err, _newCategory, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(["admin-categories"], ctx.prev);
-      const data = _err?.response?.data;
+    onError: (err) => {
+      const data = err?.response?.data;
       if (data?.errors && Array.isArray(data.errors)) {
         data.errors.forEach((e) => {
           const field = e.path?.[e.path.length - 1];
@@ -128,26 +118,18 @@ export default function AdminCategories() {
         toast.error(data?.message || data?.error || "Failed to create category");
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
-    },
-    onSuccess: () => {
-      toast.success("Category created");
-      setShowForm(false);
-      resetCreate();
-    },
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }) => updateCategory(id, payload),
-    onMutate: async ({ id, payload }) => {
-      await queryClient.cancelQueries({ queryKey: ["admin-categories"] });
-      const prev = queryClient.getQueryData(["admin-categories"]);
-      return { prev };
+    onSuccess: () => {
+      toast.success("Category updated");
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+      setEditingId(null);
+      resetUpdate();
     },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(["admin-categories"], ctx.prev);
-      const data = _err?.response?.data;
+    onError: (err) => {
+      const data = err?.response?.data;
       if (data?.errors && Array.isArray(data.errors)) {
         data.errors.forEach((e) => {
           const field = e.path?.[e.path.length - 1];
@@ -158,36 +140,17 @@ export default function AdminCategories() {
         toast.error(data?.message || data?.error || "Failed to update category");
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
-    },
-    onSuccess: () => {
-      toast.success("Category updated");
-      setEditingId(null);
-      resetUpdate();
-    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteCategory,
-    onMutate: async (deletedId) => {
-      await queryClient.cancelQueries({ queryKey: ["admin-categories"] });
-      const prev = queryClient.getQueryData(["admin-categories"]);
-      queryClient.setQueryData(["admin-categories"], (old) =>
-        Array.isArray(old) ? old.filter((c) => c._id !== deletedId) : old
-      );
-      return { prev };
-    },
-    onError: (_err, _id, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(["admin-categories"], ctx.prev);
-      toast.error("Failed to delete category");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
-    },
     onSuccess: () => {
       toast.success("Category deleted");
+      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
       setDeletingId(null);
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to delete category");
     },
   });
 
@@ -263,29 +226,13 @@ export default function AdminCategories() {
       </Helmet>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-          Categories ({totalCategories})
+          Categories ({categories.length})
         </h1>
         <Button onClick={() => setShowForm(true)} className="self-start">
           <Plus className="size-4" data-icon="inline-start" />
           Add Category
         </Button>
       </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl border border-border bg-card p-4 shadow-sm"
-      >
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search categories..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-      </motion.div>
 
       <AnimatePresence>
         {showForm && (
@@ -319,7 +266,7 @@ export default function AdminCategories() {
                     <Input
                       {...regCreate("name")}
                       placeholder="e.g. Electronics"
-                      className={errCreate.name ? "border-gray-500" : ""}
+                      className={errCreate.name ? "border-destructive" : ""}
                       onChange={(e) => {
                         regCreate("name").onChange(e);
                         const slugField = document.querySelector('[name="slug"]');
@@ -328,16 +275,16 @@ export default function AdminCategories() {
                         }
                       }}
                     />
-                    {errCreate.name && <p className="mt-1 text-xs text-gray-600">{errCreate.name.message}</p>}
+                    {errCreate.name && <p className="mt-1 text-xs text-destructive">{errCreate.name.message}</p>}
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium text-foreground">Slug *</label>
                     <Input
                       {...regCreate("slug")}
                       placeholder="e.g. electronics"
-                      className={errCreate.slug ? "border-gray-500" : ""}
+                      className={errCreate.slug ? "border-destructive" : ""}
                     />
-                    {errCreate.slug && <p className="mt-1 text-xs text-gray-600">{errCreate.slug.message}</p>}
+                    {errCreate.slug && <p className="mt-1 text-xs text-destructive">{errCreate.slug.message}</p>}
                   </div>
                 </div>
 
@@ -358,7 +305,7 @@ export default function AdminCategories() {
                   {createImage && (
                     <button
                       type="button"
-                      className="mt-1 text-xs text-gray-600 hover:text-gray-800"
+                      className="mt-1 text-xs text-destructive hover:text-foreground"
                       onClick={() => setCreateImage("")}
                     >
                       Remove image
@@ -389,30 +336,30 @@ export default function AdminCategories() {
                               <Input
                                 {...regCreate(`children.${index}.name`)}
                                 placeholder="Child name"
-                                className={errCreate.children?.[index]?.name ? "border-gray-500" : ""}
+                                className={errCreate.children?.[index]?.name ? "border-destructive" : ""}
                               />
                               {errCreate.children?.[index]?.name && (
-                                <p className="mt-1 text-xs text-gray-600">{errCreate.children?.[index]?.name.message}</p>
+                                <p className="mt-1 text-xs text-destructive">{errCreate.children?.[index]?.name.message}</p>
                               )}
                             </div>
                             <div>
                               <Input
                                 {...regCreate(`children.${index}.slug`)}
                                 placeholder="child-slug"
-                                className={errCreate.children?.[index]?.slug ? "border-gray-500" : ""}
+                                className={errCreate.children?.[index]?.slug ? "border-destructive" : ""}
                               />
                               {errCreate.children?.[index]?.slug && (
-                                <p className="mt-1 text-xs text-gray-600">{errCreate.children?.[index]?.slug.message}</p>
+                                <p className="mt-1 text-xs text-destructive">{errCreate.children?.[index]?.slug.message}</p>
                               )}
                             </div>
                           </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="mt-0.5 text-red-500 hover:bg-red-50 hover:text-red-600"
-                  onClick={() => createRemove(index)}
-                >
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="mt-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            onClick={() => createRemove(index)}
+                          >
                             <Trash2 className="size-4" />
                           </Button>
                         </div>
@@ -446,13 +393,8 @@ export default function AdminCategories() {
           <FolderTree className="mx-auto size-12 text-muted-foreground/30" />
           <p className="mt-3 text-sm text-muted-foreground">No categories yet.</p>
         </div>
-      ) : categories.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card py-20 text-center">
-          <Search className="mx-auto size-12 text-muted-foreground/30" />
-          <p className="mt-3 text-sm text-muted-foreground">No categories match your search.</p>
-        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-3">
           {categories.map((cat, i) => {
             const isEditing = editingId === cat._id;
             const isDeleting = deletingId === cat._id;
@@ -498,15 +440,15 @@ export default function AdminCategories() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                              className="text-muted-foreground hover:bg-muted hover:text-foreground"
                               disabled={editingId !== null}
                               onClick={() => setDeletingId(cat._id)}
                             >
                               <Trash2 className="size-4" />
                             </Button>
                           ) : (
-                            <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5">
-                              <span className="text-xs text-red-700">Delete?</span>
+                            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-1.5">
+                              <span className="text-xs text-foreground">Delete?</span>
                               <Button
                                 variant="destructive"
                                 size="sm"
@@ -542,18 +484,18 @@ export default function AdminCategories() {
                           <Input
                             {...regUpdate("name")}
                             placeholder="Category name"
-                            className={errUpdate.name ? "border-gray-500" : ""}
+                            className={errUpdate.name ? "border-destructive" : ""}
                           />
-                          {errUpdate.name && <p className="mt-1 text-xs text-gray-600">{errUpdate.name.message}</p>}
+                          {errUpdate.name && <p className="mt-1 text-xs text-destructive">{errUpdate.name.message}</p>}
                         </div>
                         <div>
                           <label className="mb-1 block text-sm font-medium text-foreground">Slug</label>
                           <Input
                             {...regUpdate("slug")}
                             placeholder="category-slug"
-                            className={errUpdate.slug ? "border-gray-500" : ""}
+                            className={errUpdate.slug ? "border-destructive" : ""}
                           />
-                          {errUpdate.slug && <p className="mt-1 text-xs text-gray-600">{errUpdate.slug.message}</p>}
+                          {errUpdate.slug && <p className="mt-1 text-xs text-destructive">{errUpdate.slug.message}</p>}
                         </div>
                       </div>
 
@@ -574,7 +516,7 @@ export default function AdminCategories() {
                         {editImage && (
                           <button
                             type="button"
-                            className="mt-1 text-xs text-gray-600 hover:text-gray-800"
+                            className="mt-1 text-xs text-destructive hover:text-foreground"
                             onClick={() => setEditImage("")}
                           >
                             Remove image
@@ -605,30 +547,30 @@ export default function AdminCategories() {
                                     <Input
                                       {...regUpdate(`children.${index}.name`)}
                                       placeholder="Child name"
-                                      className={errUpdate.children?.[index]?.name ? "border-gray-500" : ""}
+                                      className={errUpdate.children?.[index]?.name ? "border-destructive" : ""}
                                     />
                                     {errUpdate.children?.[index]?.name && (
-                                      <p className="mt-1 text-xs text-gray-600">{errUpdate.children?.[index]?.name.message}</p>
+                                      <p className="mt-1 text-xs text-destructive">{errUpdate.children?.[index]?.name.message}</p>
                                     )}
                                   </div>
                                   <div>
                                     <Input
                                       {...regUpdate(`children.${index}.slug`)}
                                       placeholder="child-slug"
-                                      className={errUpdate.children?.[index]?.slug ? "border-gray-500" : ""}
+                                      className={errUpdate.children?.[index]?.slug ? "border-destructive" : ""}
                                     />
                                     {errUpdate.children?.[index]?.slug && (
-                                      <p className="mt-1 text-xs text-gray-600">{errUpdate.children?.[index]?.slug.message}</p>
+                                      <p className="mt-1 text-xs text-destructive">{errUpdate.children?.[index]?.slug.message}</p>
                                     )}
                                   </div>
                                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="mt-0.5 text-red-500 hover:bg-red-50 hover:text-red-600"
-                  onClick={() => updateRemove(index)}
-                >
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="mt-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                  onClick={() => updateRemove(index)}
+                                >
                                   <Trash2 className="size-4" />
                                 </Button>
                               </div>
@@ -679,9 +621,6 @@ export default function AdminCategories() {
             );
           })}
         </div>
-      )}
-      {totalCategories > perPage && (
-        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       )}
     </div>
   );

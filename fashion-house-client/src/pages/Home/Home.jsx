@@ -7,6 +7,7 @@ import WhyChooseUs from "@/components/sections/WhyChooseUs";
 import CustomerReviews from "@/components/sections/CustomerReviews";
 import FAQ from "@/components/sections/FAQ";
 import Footer from "@/pages/sharedPages/Footer";
+import LazySection from "@/components/LazySection";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
 import { useLocation } from "react-router";
@@ -31,13 +32,27 @@ export default function Home() {
     <div className="h-full">
       <Helmet><title>{`Home | ${siteName}`}</title></Helmet>
       <Hero />
-      <NewArrivals />
-      <Categories />
-      <BestSellingProducts />
-      <FlashSale />
-      <WhyChooseUs />
-      <CustomerReviews />
-      <FAQ />
+      <LazySection>
+        <NewArrivals />
+      </LazySection>
+      <LazySection>
+        <Categories />
+      </LazySection>
+      <LazySection>
+        <BestSellingProducts />
+      </LazySection>
+      <LazySection>
+        <FlashSale />
+      </LazySection>
+      <LazySection>
+        <WhyChooseUs />
+      </LazySection>
+      <LazySection>
+        <CustomerReviews />
+      </LazySection>
+      <LazySection>
+        <FAQ />
+      </LazySection>
       <Footer />
     </div>
   );

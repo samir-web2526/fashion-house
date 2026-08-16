@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router";
 
 import MainLayout from "../layouts/MainLayout";
@@ -6,32 +7,38 @@ import DashboardLayout from "../layouts/DashboardLayout";
 
 import AdminRoute from "./AdminRoute";
 
-import Home from "../pages/Home/Home";
-import Login from "../pages/Auth/Login";
-import Products from "../pages/Products/Products";
-import ProductDetails from "../pages/Products/ProductDetails";
-import Cart from "../pages/Cart/Cart";
-import Checkout from "../pages/Checkout/Checkout";
-import MyOrders from "../pages/Orders/MyOrders";
-import OrderDetails from "../pages/Orders/OrderDetails";
-import AdminDashboard from "../pages/Dashboard/AdminDashboard";
-import AdminProducts from "../pages/Dashboard/AdminProducts";
-import AdminProductDetails from "@/pages/Dashboard/AdminProductDetails";
-import NotFound from "../pages/Error/NotFound";
-import AdminCategories from "@/pages/Dashboard/AdminCategories";
-import AdminOrders from "@/pages/Dashboard/AdminOrders";
-import AdminOrderDetails from "@/pages/Dashboard/AdminOrderDetails";
-import AdminSettings from "@/pages/Dashboard/AdminSettings";
-import AdminBanners from "@/pages/Dashboard/AdminBanners";
-import Profile from "@/pages/Profile/Profile";
-import ChangePassword from "@/pages/Profile/ChangePassword";
+const Loading = () => (
+  <div className="flex h-screen items-center justify-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-foreground border-t-transparent" />
+  </div>
+);
 
-import Terms from "@/pages/Static/Terms";
-import Privacy from "@/pages/Static/Privacy";
-import ReturnPolicy from "@/pages/Static/ReturnPolicy";
-import DeliveryRules from "@/pages/Static/DeliveryRules";
-import Contact from "@/pages/Static/Contact";
-import About from "@/pages/Static/About";
+const Home = lazy(() => import("../pages/Home/Home"));
+const Login = lazy(() => import("../pages/Auth/Login"));
+const Products = lazy(() => import("../pages/Products/Products"));
+const ProductDetails = lazy(() => import("../pages/Products/ProductDetails"));
+const Cart = lazy(() => import("../pages/Cart/Cart"));
+const Checkout = lazy(() => import("../pages/Checkout/Checkout"));
+const MyOrders = lazy(() => import("../pages/Orders/MyOrders"));
+const OrderDetails = lazy(() => import("../pages/Orders/OrderDetails"));
+const AdminDashboard = lazy(() => import("../pages/Dashboard/AdminDashboard"));
+const AdminProducts = lazy(() => import("../pages/Dashboard/AdminProducts"));
+const AdminProductDetails = lazy(() => import("@/pages/Dashboard/AdminProductDetails"));
+const NotFound = lazy(() => import("../pages/Error/NotFound"));
+const AdminCategories = lazy(() => import("@/pages/Dashboard/AdminCategories"));
+const AdminOrders = lazy(() => import("@/pages/Dashboard/AdminOrders"));
+const AdminOrderDetails = lazy(() => import("@/pages/Dashboard/AdminOrderDetails"));
+const AdminSettings = lazy(() => import("@/pages/Dashboard/AdminSettings"));
+const AdminBanners = lazy(() => import("@/pages/Dashboard/AdminBanners"));
+
+const Terms = lazy(() => import("@/pages/Static/Terms"));
+const Privacy = lazy(() => import("@/pages/Static/Privacy"));
+const ReturnPolicy = lazy(() => import("@/pages/Static/ReturnPolicy"));
+const DeliveryRules = lazy(() => import("@/pages/Static/DeliveryRules"));
+const Contact = lazy(() => import("@/pages/Static/Contact"));
+const About = lazy(() => import("@/pages/Static/About"));
+const Profile = lazy(() => import("@/pages/Profile/Profile"));
+const ChangePassword = lazy(() => import("@/pages/Profile/ChangePassword"));
 
 const router = createBrowserRouter([
   {
@@ -40,55 +47,55 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />,
+        element: <Suspense fallback={<Loading />}><Home /></Suspense>,
       },
       {
         path: "products",
-        element: <Products />,
+        element: <Suspense fallback={<Loading />}><Products /></Suspense>,
       },
       {
         path: "product/:id",
-        element: <ProductDetails />,
+        element: <Suspense fallback={<Loading />}><ProductDetails /></Suspense>,
       },
       {
         path: "cart",
-        element: <Cart />,
+        element: <Suspense fallback={<Loading />}><Cart /></Suspense>,
       },
       {
         path: "checkout",
-        element: <Checkout />,
+        element: <Suspense fallback={<Loading />}><Checkout /></Suspense>,
       },
       {
         path: "orders",
-        element: <MyOrders />,
+        element: <Suspense fallback={<Loading />}><MyOrders /></Suspense>,
       },
       {
         path: "orders/:id",
-        element: <OrderDetails />,
+        element: <Suspense fallback={<Loading />}><OrderDetails /></Suspense>,
       },
       {
         path: "terms",
-        element: <Terms />,
+        element: <Suspense fallback={<Loading />}><Terms /></Suspense>,
       },
       {
         path: "privacy",
-        element: <Privacy />,
+        element: <Suspense fallback={<Loading />}><Privacy /></Suspense>,
       },
       {
         path: "return-policy",
-        element: <ReturnPolicy />,
+        element: <Suspense fallback={<Loading />}><ReturnPolicy /></Suspense>,
       },
       {
         path: "delivery-rules",
-        element: <DeliveryRules />,
+        element: <Suspense fallback={<Loading />}><DeliveryRules /></Suspense>,
       },
       {
         path: "contact",
-        element: <Contact />,
+        element: <Suspense fallback={<Loading />}><Contact /></Suspense>,
       },
       {
         path: "about",
-        element: <About />,
+        element: <Suspense fallback={<Loading />}><About /></Suspense>,
       },
     ],
   },
@@ -98,7 +105,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/login",
-        element: <Login />,
+        element: <Suspense fallback={<Loading />}><Login /></Suspense>,
       },
     ],
   },
@@ -109,50 +116,50 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <AdminDashboard />,
+        element: <Suspense fallback={<Loading />}><AdminDashboard /></Suspense>,
       },
       {
         path: "products",
-        element: <AdminProducts />,
+        element: <Suspense fallback={<Loading />}><AdminProducts /></Suspense>,
       },
       {
         path: "products/:id",
-        element: <AdminProductDetails />,
+        element: <Suspense fallback={<Loading />}><AdminProductDetails /></Suspense>,
       },
       {
         path: "categories",
-        element: <AdminCategories />,
+        element: <Suspense fallback={<Loading />}><AdminCategories /></Suspense>,
       },
       {
         path: "orders",
-        element: <AdminOrders />,
+        element: <Suspense fallback={<Loading />}><AdminOrders /></Suspense>,
       },
       {
         path: "orders/:id",
-        element: <AdminOrderDetails />,
+        element: <Suspense fallback={<Loading />}><AdminOrderDetails /></Suspense>,
       },
       {
         path: "settings",
-        element: <AdminSettings />,
+        element: <Suspense fallback={<Loading />}><AdminSettings /></Suspense>,
       },
       {
         path: "banners",
-        element: <AdminBanners />,
+        element: <Suspense fallback={<Loading />}><AdminBanners /></Suspense>,
       },
       {
-        path: "admin-profile",
-        element: <Profile />,
+        path: "profile",
+        element: <Suspense fallback={<Loading />}><Profile /></Suspense>,
       },
       {
         path: "change-password",
-        element: <ChangePassword />,
+        element: <Suspense fallback={<Loading />}><ChangePassword /></Suspense>,
       }
     ],
   },
 
   {
     path: "*",
-    element: <NotFound />,
+    element: <Suspense fallback={<Loading />}><NotFound /></Suspense>,
   },
 ]);
 

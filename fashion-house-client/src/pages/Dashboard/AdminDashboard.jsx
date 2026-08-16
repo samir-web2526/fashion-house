@@ -72,33 +72,18 @@ export default function AdminDashboard() {
   });
 
   const { data: productsData, isLoading: productsLoading } = useQuery({
-    queryKey: ["admin-products"],
-    queryFn: () => getProducts({ limit: 1000 }),
+    queryKey: ["admin-dashboard-products"],
+    queryFn: () => getProducts({ limit: 50 }),
   });
 
   const statusMutation = useMutation({
     mutationFn: ({ id, orderStatus }) => updateOrderStatus(id, { orderStatus }),
-    onMutate: async ({ id, orderStatus }) => {
-      await queryClient.cancelQueries({ queryKey: ["admin-orders"] });
-      const prev = queryClient.getQueryData(["admin-orders"]);
-      queryClient.setQueryData(["admin-orders"], (old) => {
-        const orders = Array.isArray(old) ? old : old?.orders ?? [];
-        const updated = orders.map((o) =>
-          (o._id === id) ? { ...o, orderStatus } : o
-        );
-        return Array.isArray(old) ? updated : { ...old, orders: updated };
-      });
-      return { prev };
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(["admin-orders"], ctx.prev);
-      toast.error("Failed to update status");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-    },
     onSuccess: () => {
       toast.success("Order status updated");
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to update status");
     },
   });
 
@@ -176,9 +161,17 @@ export default function AdminDashboard() {
           {Object.entries(STATUS_CONFIG).map(([key, config]) => {
             const Icon = config.icon;
             const count = ordersByStatus[key] || 0;
+            const colorClass =
+              key === "pending" ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" :
+              key === "confirmed" ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" :
+              key === "processing" ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" :
+              key === "shipped" ? "bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400" :
+              key === "delivered" ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" :
+              key === "cancelled" ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" :
+              "bg-muted text-muted-foreground";
             return (
               <div key={key} className="rounded-lg border border-border p-3 text-center">
-                <div className={`mx-auto mb-2 flex size-8 items-center justify-center rounded-full ${config.color}`}>
+                <div className={`mx-auto mb-2 flex size-8 items-center justify-center rounded-full ${colorClass}`}>
                   <Icon className="size-4" />
                 </div>
                 <p className="text-lg font-bold text-foreground">{count}</p>
@@ -200,10 +193,10 @@ export default function AdminDashboard() {
             <TrendingUp className="size-5 text-muted-foreground" />
             <h2 className="text-base font-semibold text-foreground">Recent Orders</h2>
           </div>
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/dashboard/orders">
+          <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+            <Link to="/dashboard/orders" className="flex items-center gap-1.5">
               View All
-              <ArrowUpRight className="size-4" data-icon="inline-start" />
+              <ArrowUpRight className="size-4" />
             </Link>
           </Button>
         </div>
@@ -222,7 +215,6 @@ export default function AdminDashboard() {
             </thead>
             <tbody className="divide-y divide-border">
               {recentOrders.map((order) => {
-                const cfg = STATUS_CONFIG[order.orderStatus] || STATUS_CONFIG.pending;
                 return (
                   <tr key={order._id} className="hover:bg-muted/30">
                     <td className="px-5 py-3 font-medium text-foreground">
@@ -236,8 +228,16 @@ export default function AdminDashboard() {
                       {formatBDT(order.totalPrice)}
                     </td>
                     <td className="px-5 py-3">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.color}`}>
-                        {cfg.label}
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                        order.orderStatus === "pending" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                        order.orderStatus === "confirmed" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" :
+                        order.orderStatus === "processing" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" :
+                        order.orderStatus === "shipped" ? "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400" :
+                        order.orderStatus === "delivered" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                        order.orderStatus === "cancelled" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" :
+                        "bg-muted text-muted-foreground"
+                      }`}>
+                        {STATUS_CONFIG[order.orderStatus]?.label || order.orderStatus}
                       </span>
                     </td>
                     <td className="px-5 py-3">
@@ -247,7 +247,15 @@ export default function AdminDashboard() {
                         onChange={(e) =>
                           statusMutation.mutate({ id: order._id, orderStatus: e.target.value })
                         }
-                        className="rounded-lg border border-border bg-background px-2 py-1 text-xs outline-none focus:border-ring"
+                        className={`rounded-full border px-3 py-1 pr-7 text-xs font-medium focus:outline-none ${
+                          order.orderStatus === "pending" ? "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-700" :
+                          order.orderStatus === "confirmed" ? "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-700" :
+                          order.orderStatus === "processing" ? "border-purple-300 bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-700" :
+                          order.orderStatus === "shipped" ? "border-cyan-300 bg-cyan-50 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-400 dark:border-cyan-700" :
+                          order.orderStatus === "delivered" ? "border-green-300 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700" :
+                          order.orderStatus === "cancelled" ? "border-red-300 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 dark:border-red-700" :
+                          "border-border bg-background text-foreground"
+                        }`}
                       >
                         {Object.keys(STATUS_CONFIG).map((s) => (
                           <option key={s} value={s}>
@@ -268,6 +276,32 @@ export default function AdminDashboard() {
               )}
             </tbody>
           </table>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="rounded-xl border border-border bg-card p-5 shadow-sm"
+      >
+        <h3 className="mb-3 text-sm font-semibold text-foreground">Low Stock Products</h3>
+        <div className="space-y-2">
+          {products
+            .filter((p) => p.stock <= 10 && p.stock > 0)
+            .sort((a, b) => a.stock - b.stock)
+            .slice(0, 5)
+            .map((p) => (
+              <div key={p._id} className="flex items-center justify-between text-sm">
+                <span className="truncate text-muted-foreground">{p.title}</span>
+                <span className="ml-2 shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                  {p.stock} left
+                </span>
+              </div>
+            ))}
+          {products.filter((p) => p.stock <= 10 && p.stock > 0).length === 0 && (
+            <p className="text-xs text-muted-foreground">All products well stocked.</p>
+          )}
         </div>
       </motion.div>
     </div>

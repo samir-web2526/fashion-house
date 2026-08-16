@@ -1,7 +1,8 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
-import { getFlashSaleProducts } from "@/services/product.api";
+import { getProducts } from "@/services/product.api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import CountdownTimer from "./CountdownTimer";
@@ -27,14 +28,30 @@ function FlashSaleSkeleton() {
   );
 }
 
-export default function FlashSale() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["flash-sale-products"],
-    queryFn: getFlashSaleProducts,
+function getFlashSaleProducts(products) {
+  const sorted = [...products].sort((a, b) => {
+    const discDiff = (b.discountPercentage ?? 0) - (a.discountPercentage ?? 0);
+    if (discDiff !== 0) return discDiff;
+    const ratingDiff = (b.rating ?? 0) - (a.rating ?? 0);
+    if (ratingDiff !== 0) return ratingDiff;
+    return (b.stock ?? 0) - (a.stock ?? 0);
   });
 
-  const products = data?.products ?? [];
-  const maxStock = data?.maxStock ?? 1;
+  return sorted.slice(0, 8);
+}
+
+export default function FlashSale() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: () => getProducts({ limit: 1000 }),
+  });
+
+  const { products, maxStock } = useMemo(() => {
+    const allProducts = data?.products ?? [];
+    const flashProducts = getFlashSaleProducts(allProducts);
+    const max = allProducts.reduce((m, p) => Math.max(m, p.stock ?? 0), 1);
+    return { products: flashProducts, maxStock: max };
+  }, [data]);
 
   return (
     <section id="flash-sale" className="relative overflow-hidden bg-linear-to-b from-gray-100/80 via-background to-background py-16 sm:py-20 dark:from-gray-900/20">

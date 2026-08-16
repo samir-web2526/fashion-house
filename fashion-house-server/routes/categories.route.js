@@ -3,6 +3,7 @@ const express = require("express");
 const {
     createCategory,
     getAllCategories,
+    getCategoriesWithCounts,
     getSingleCategory,
     updateCategory,
     deleteCategory
@@ -29,6 +30,8 @@ router.post(
 );
 
 router.get("/", getAllCategories);
+
+router.get("/with-counts", getCategoriesWithCounts);
 
 router.get("/:id", getSingleCategory);
 

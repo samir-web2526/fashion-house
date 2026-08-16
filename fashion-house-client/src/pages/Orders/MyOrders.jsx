@@ -36,20 +36,20 @@ const STATUS_CONFIG = {
     label: "Pending",
   },
   confirmed: {
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
-    dot: "bg-gray-500",
+    color: "bg-muted text-foreground border-border",
+    dot: "bg-foreground",
     icon: Check,
     label: "Confirmed",
   },
   processing: {
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
-    dot: "bg-gray-500",
+    color: "bg-muted text-foreground border-border",
+    dot: "bg-foreground",
     icon: Package,
     label: "Processing",
   },
   shipped: {
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
-    dot: "bg-gray-500",
+    color: "bg-muted text-foreground border-border",
+    dot: "bg-foreground",
     icon: Truck,
     label: "Shipped",
   },
@@ -60,8 +60,8 @@ const STATUS_CONFIG = {
     label: "Delivered",
   },
   cancelled: {
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
-    dot: "bg-gray-500",
+    color: "bg-destructive/10 text-destructive border-destructive/20",
+    dot: "bg-destructive",
     icon: XCircle,
     label: "Cancelled",
   },
@@ -87,9 +87,9 @@ function formatDate(dateStr) {
 function ProgressTracker({ status }) {
   if (status === "cancelled") {
     return (
-      <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-3 py-1.5 dark:border-gray-700 dark:bg-gray-800">
-        <XCircle className="size-3.5 text-gray-600" />
-        <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+      <div className="flex items-center gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-3 py-1.5">
+        <XCircle className="size-3.5 text-destructive" />
+        <span className="text-[11px] font-semibold text-destructive">
           Cancelled
         </span>
       </div>
@@ -414,12 +414,12 @@ export default function MyOrders() {
             />
             <Button
               type="submit"
-              className="rounded bg-black px-8 py-3 text-sm font-semibold text-white hover:bg-gray-800 sm:w-auto"
+              className="rounded bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 sm:w-auto"
               disabled={trackMutation.isPending}
             >
               {trackMutation.isPending ? (
                 <span className="flex items-center gap-2">
-                  <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
                   Tracking...
                 </span>
               ) : (

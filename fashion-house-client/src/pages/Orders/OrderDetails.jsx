@@ -31,17 +31,17 @@ const STATUS_CONFIG = {
     label: "Pending",
   },
   confirmed: {
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
+    color: "bg-muted text-foreground border-border",
     icon: Check,
     label: "Confirmed",
   },
   processing: {
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
+    color: "bg-muted text-foreground border-border",
     icon: Package,
     label: "Processing",
   },
   shipped: {
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
+    color: "bg-muted text-foreground border-border",
     icon: Truck,
     label: "Shipped",
   },
@@ -51,7 +51,7 @@ const STATUS_CONFIG = {
     label: "Delivered",
   },
   cancelled: {
-    color: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700",
+    color: "bg-destructive/10 text-destructive border-destructive/20",
     icon: XCircle,
     label: "Cancelled",
   },
@@ -94,9 +94,9 @@ function formatTime(dateStr) {
 function ProgressTracker({ status }) {
   if (status === "cancelled") {
     return (
-      <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
-        <XCircle className="size-4 text-gray-600" />
-        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+      <div className="flex items-center gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-4 py-2">
+        <XCircle className="size-4 text-destructive" />
+        <span className="text-xs font-semibold text-destructive">
           This order has been cancelled
         </span>
       </div>

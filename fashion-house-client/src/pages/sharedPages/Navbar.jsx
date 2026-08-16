@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Search, ShoppingCart, Sun, Moon, ChevronDown, Menu, X, Phone, Package, House, LayoutGrid, Store, TrendingUp, Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import useCart from "@/hooks/useCart";
@@ -19,8 +19,6 @@ const Navbar = () => {
     const [search, setSearch] = useState("");
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mobileCatOpen, setMobileCatOpen] = useState(false);
-    const [profileOpen, setProfileOpen] = useState(false);
-    const profileRef = useRef(null);
 
     const scrollToSection = (sectionId) => {
         if (location.pathname === "/") {
@@ -40,23 +38,13 @@ const Navbar = () => {
         refetchCartCount(getLocalCartCount());
     }, [refetchCartCount]);
 
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (profileRef.current && !profileRef.current.contains(e.target)) {
-                setProfileOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
     return (
         <header className="sticky top-0 z-100 bg-background">
             {/* Top Header */}
             <div className="border-b border-border">
                 <div className="mx-auto flex h-16 sm:h-20 max-w-7xl items-center justify-between px-4">
                     <Link to="/" className="flex items-center shrink-0">
-                        {logo && <img src={logo} alt={siteName} className="h-2 sm:h-16 w-auto dark:invert" />}
+                        {logo && <img src={logo} alt={siteName} className="h-8 sm:h-14 w-auto dark:invert" />}
                     </Link>
 
                     <div className="hidden flex-1 max-w-xl mx-6 md:block">
@@ -89,7 +77,7 @@ const Navbar = () => {
                     <div className="flex items-center gap-2 sm:gap-3">
                         <Link
                             to="/orders"
-                            className="hidden items-center gap-1.5 rounded-lg bg-black px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-gray-800 lg:flex"
+                            className="hidden items-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 lg:flex"
                         >
                             <Package className="size-4" />
                             <span className="hidden xl:inline">Track Your Order</span>
@@ -97,7 +85,7 @@ const Navbar = () => {
 
                         <a
                             href={`tel:${contactPhone || "+8801XXXXXXXXX"}`}
-                            className="hidden items-center gap-1.5 rounded-lg bg-black px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-gray-800 lg:flex"
+                            className="hidden items-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 lg:flex"
                         >
                             <Phone className="size-4" />
                             <span className="hidden xl:inline">{contactPhone || "+8809613111333"}</span>
@@ -126,35 +114,39 @@ const Navbar = () => {
                         </Link>
 
                         {user ? (
-                            <div className="relative" ref={profileRef}>
+                            <div className="relative group/profile">
                                 <button
-                                    onClick={() => setProfileOpen(!profileOpen)}
-                                    className="flex size-9 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground cursor-pointer"
+                                    className="flex size-9 items-center justify-center rounded-full bg-foreground text-sm font-bold text-background transition-opacity hover:opacity-90"
                                 >
-                                    {user?.name?.charAt(0).toUpperCase()}
+                                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
                                 </button>
-                                {profileOpen && (
-                                    <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-border bg-background p-2 shadow-lg z-50">
-                                        <div className="px-3 py-2 border-b border-border mb-1">
-                                            <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
-                                            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                                        </div>
-                                        {user?.role === "admin" && (
-                                            <button
-                                                onClick={() => { navigate("/dashboard"); setProfileOpen(false); }}
-                                                className="w-full text-left rounded-md px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                                            >
-                                                Dashboard
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={async () => { await logout(); setProfileOpen(false); navigate("/"); }}
-                                            className="w-full text-left rounded-md px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                                        >
-                                            Logout
-                                        </button>
+                                <div className="invisible opacity-0 group-hover/profile:visible group-hover/profile:opacity-100 transition-all duration-200 absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-border bg-background py-2 shadow-xl">
+                                    <div className="px-4 py-2 border-b border-border">
+                                        <p className="text-sm font-semibold text-foreground truncate">{user?.name}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                                     </div>
-                                )}
+                                    <Link
+                                        to="/dashboard"
+                                        className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                                    >
+                                        Dashboard
+                                    </Link>
+                                    <Link
+                                        to="/dashboard/profile"
+                                        className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                                    >
+                                        Profile
+                                    </Link>
+                                    <button
+                                        onClick={async () => {
+                                            await logout();
+                                            navigate("/");
+                                        }}
+                                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
                             </div>
                         ) : (
                             <Link
@@ -367,26 +359,31 @@ const Navbar = () => {
                             </Link>
                             {user ? (
                                 <>
-                                    <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 bg-muted/50">
-                                        <div className="flex size-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                                            {user?.name?.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium text-foreground truncate">{user?.name}</p>
-                                            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-                                        </div>
+                                    <div className="rounded-lg bg-muted/50 px-4 py-3">
+                                        <p className="text-sm font-semibold text-foreground truncate">{user?.name}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                                     </div>
-                                    {user?.role === "admin" && (
-                                        <button
-                                            onClick={() => { navigate("/dashboard"); setMobileOpen(false); }}
-                                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                                        >
-                                            Dashboard
-                                        </button>
-                                    )}
+                                    <Link
+                                        to="/dashboard"
+                                        onClick={() => setMobileOpen(false)}
+                                        className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                                    >
+                                        Dashboard
+                                    </Link>
+                                    <Link
+                                        to="/dashboard/profile"
+                                        onClick={() => setMobileOpen(false)}
+                                        className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                                    >
+                                        Profile
+                                    </Link>
                                     <button
-                                        onClick={async () => { await logout(); setMobileOpen(false); navigate("/"); }}
-                                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                                        onClick={async () => {
+                                            await logout();
+                                            setMobileOpen(false);
+                                            navigate("/");
+                                        }}
+                                        className="block w-full rounded-lg border border-red-200 px-4 py-2.5 text-center text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/10"
                                     >
                                         Logout
                                     </button>

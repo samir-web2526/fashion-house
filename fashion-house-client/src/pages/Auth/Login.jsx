@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { useNavigate, Link } from "react-router";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
   Card,
@@ -107,10 +107,10 @@ export default function Login() {
                       message: "Invalid email address",
                     },
                   })}
-                  className={errors.email ? "border-gray-500 focus:border-gray-500" : ""}
+                  className={errors.email ? "border-destructive focus:border-destructive" : ""}
                 />
                 {errors.email && (
-                  <p className="text-xs text-gray-600">{errors.email.message}</p>
+                  <p className="text-xs text-destructive">{errors.email.message}</p>
                 )}
               </div>
 
@@ -123,10 +123,10 @@ export default function Login() {
                   {...register("password", {
                     required: "Password is required",
                   })}
-                  className={errors.password ? "border-gray-500 focus:border-gray-500" : ""}
+                  className={errors.password ? "border-destructive focus:border-destructive" : ""}
                 />
                 {errors.password && (
-                  <p className="text-xs text-gray-600">{errors.password.message}</p>
+                  <p className="text-xs text-destructive">{errors.password.message}</p>
                 )}
               </div>
 

@@ -1,40 +1,46 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AuthContext } from "./authContext";
 import { getProfile, logoutUser } from "@/services/auth.api";
+
+function useMountEffect(fn) {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fn(); }, []);
+}
 
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
-      const userData = await getProfile();
+      const data = await getProfile();
+      const userData = data?.user || data;
       setUser(userData);
+      setLoading(false);
       return userData;
     } catch {
       setUser(null);
+      setLoading(false);
       return null;
     }
-  };
-
-  useEffect(() => {
-    fetchUser().finally(() => setLoading(false));
   }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await logoutUser();
     } catch {
       // ignore
+    } finally {
+      setUser(null);
     }
-    setUser(null);
-  };
+  }, []);
+
+  useMountEffect(() => { fetchUser(); });
 
   const info = {
     user,
     setUser,
     loading,
-    setLoading,
     fetchUser,
     logout,
   };

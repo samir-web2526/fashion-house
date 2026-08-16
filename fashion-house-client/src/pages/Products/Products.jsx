@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, X} from "lucide-react";
+import { Search, SlidersHorizontal, X, Loader2 } from "lucide-react";
 import { getProducts } from "@/services/product.api";
 import { getCategories } from "@/services/category.api";
 import { Button } from "@/components/ui/Button";
@@ -10,7 +10,6 @@ import Input from "@/components/ui/Input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProductCard from "@/components/sections/ProductCard";
-import Pagination from "@/components/ui/Pagination";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
 
@@ -36,17 +35,18 @@ const SORT_OPTIONS = [
   { label: "Rating", value: "rating" },
 ];
 
+const PAGE_SIZE = 12;
+
 export default function Products() {
   const { siteName } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
+  const loadMoreRef = useRef(null);
 
   const selectedCategory = searchParams.get("category") || "";
   const searchQuery = searchParams.get("search") || "";
 
   const [sort, setSort] = useState("newest");
-  const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const limit = 12;
 
   const updateCategory = (slug) => {
     setSearchParams((prev) => {
@@ -55,7 +55,6 @@ export default function Products() {
       else next.delete("category");
       return next;
     });
-    setPage(1);
   };
 
   const applySearch = (q) => {
@@ -65,7 +64,6 @@ export default function Products() {
       else next.delete("search");
       return next;
     });
-    setPage(1);
   };
 
   const { data: categoriesData } = useQuery({
@@ -73,17 +71,31 @@ export default function Products() {
     queryFn: getCategories,
   });
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: () => getProducts({ limit: 1000 }),
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["products", "infinite"],
+    queryFn: ({ pageParam = 1 }) => getProducts({ page: pageParam, limit: PAGE_SIZE }),
+    getNextPageParam: (lastPage, allPages) => {
+      const total = lastPage?.total ?? lastPage?.products?.length ?? 0;
+      const loaded = allPages.reduce((sum, p) => sum + (p?.products?.length ?? 0), 0);
+      return loaded < total ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
   });
 
-  const categories = useMemo(() => {
-    return categoriesData ?? [];
-  }, [categoriesData]);
+  const categories = useMemo(() => categoriesData ?? [], [categoriesData]);
+
+  const allProducts = useMemo(() => {
+    return data?.pages?.flatMap((p) => p?.products ?? []) ?? [];
+  }, [data]);
 
   const filteredProducts = useMemo(() => {
-    let products = data?.products ?? [];
+    let products = allProducts;
 
     if (selectedCategory) {
       const match = categories.find(
@@ -119,7 +131,6 @@ export default function Products() {
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-
       const matchedCategorySlugs = [];
       for (const parent of categories) {
         if (parent.name.toLowerCase().includes(q) || parent.slug.toLowerCase().includes(q)) {
@@ -133,7 +144,6 @@ export default function Products() {
           }
         }
       }
-
       products = products.filter(
         (p) =>
           p.title?.toLowerCase().includes(q) ||
@@ -163,13 +173,30 @@ export default function Products() {
     }
 
     return sorted;
-  }, [data, selectedCategory, searchQuery, sort, categories]);
+  }, [allProducts, selectedCategory, searchQuery, sort, categories]);
 
-  const totalPages = Math.ceil(filteredProducts.length / limit);
-  const paginatedProducts = filteredProducts.slice(
-    (page - 1) * limit,
-    page * limit
-  );
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          handleLoadMore();
+        }
+      },
+      { rootMargin: "300px" }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [handleLoadMore]);
 
   const handleCategoryChange = (slug) => {
     updateCategory(slug === selectedCategory ? "" : slug);
@@ -178,7 +205,6 @@ export default function Products() {
   const clearFilters = () => {
     setSearchParams({});
     setSort("newest");
-    setPage(1);
   };
 
   const hasFilters = selectedCategory || searchQuery;
@@ -413,10 +439,7 @@ export default function Products() {
                   <SlidersHorizontal className="size-4 text-muted-foreground hidden lg:block" />
                   <select
                     value={sort}
-                    onChange={(e) => {
-                      setSort(e.target.value);
-                      setPage(1);
-                    }}
+                    onChange={(e) => setSort(e.target.value)}
                     className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground outline-none focus:border-ring"
                   >
                     {SORT_OPTIONS.map((opt) => (
@@ -436,7 +459,7 @@ export default function Products() {
                     <ProductSkeleton key={i} />
                   ))}
                 </div>
-              ) : paginatedProducts.length === 0 ? (
+              ) : filteredProducts.length === 0 ? (
                 <div className="py-20 text-center">
                   <p className="text-sm text-muted-foreground">No products found.</p>
                   {hasFilters && (
@@ -451,21 +474,25 @@ export default function Products() {
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                  {paginatedProducts.map((product, i) => (
-                    <ProductCard key={product._id} product={product} index={i} />
-                  ))}
-                </div>
-              )}
+                <>
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredProducts.map((product, i) => (
+                      <ProductCard key={product._id} product={product} index={i} />
+                    ))}
+                  </div>
 
-              {totalPages > 1 && (
-                <div className="mt-8 flex justify-center pb-4">
-                  <Pagination
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
-                  />
-                </div>
+                  <div ref={loadMoreRef} className="flex justify-center py-8">
+                    {isFetchingNextPage && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="size-4 animate-spin" />
+                        Loading more products...
+                      </div>
+                    )}
+                    {!hasNextPage && filteredProducts.length > 0 && (
+                      <p className="text-sm text-muted-foreground">All products loaded</p>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>

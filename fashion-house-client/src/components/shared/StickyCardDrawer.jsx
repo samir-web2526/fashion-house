@@ -9,9 +9,12 @@ import { Button } from "@/components/ui/Button";
 import useCart from "@/hooks/useCart";
 import { formatBDT } from "@/utils/currency";
 import { getLocalCart, removeFromLocalCart, getLocalCartCount } from "@/utils/localCart";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function StickyCartDrawer() {
   const { cartCount, refetchCartCount } = useCart();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -79,6 +82,7 @@ export default function StickyCartDrawer() {
   });
 
   if (typeof document === "undefined") return null;
+  if (isAdmin) return null;
 
   const content = (
     <>
@@ -91,7 +95,7 @@ export default function StickyCartDrawer() {
         <div className="relative">
           <ShoppingCart className="size-4 sm:size-5" />
           {cartCount > 0 && (
-            <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-gray-500 px-1.5 text-[10px] font-semibold text-white">
+            <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
               {cartCount}
             </span>
           )}
@@ -163,9 +167,9 @@ export default function StickyCartDrawer() {
                         {item.price ? formatBDT(item.price * item.quantity) : "N/A"}
                       </p>
                     </div>
-  <button
-    type="button"
-    className="rounded-lg p-2 text-red-400 transition hover:bg-red-50 hover:text-red-500"
+                    <button
+                      type="button"
+                      className="rounded-lg p-2 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
                       onClick={() => removeMutation.mutate({ productId: item.productId, size: item.size || "" })}
                       aria-label={`Remove ${item.title || "item"} from cart`}
                     >

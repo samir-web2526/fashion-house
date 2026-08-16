@@ -5,6 +5,7 @@ import { Star, Trophy, Flame } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/utils/currency";
 import OrderModal from "@/components/ui/OrderModal";
+import { useAuth } from "@/hooks/useAuth";
 
 function StockBar({ stock, maxStock }) {
   if (stock === 0) return null;
@@ -57,6 +58,8 @@ const badgeConfig = {
 
 export default function ProductCard({ product, index, badge }) {
   const [showModal, setShowModal] = useState(false);
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const hasDiscount = product.discountPercentage > 0;
   const discountedPrice = hasDiscount
     ? (product.price * (1 - product.discountPercentage / 100)).toFixed(2)
@@ -166,27 +169,31 @@ export default function ProductCard({ product, index, badge }) {
               <StockBar stock={product.stock} maxStock={100} />
             </div>
 
-            <div className="p-4 pt-0">
-              <button
-                disabled={isOutOfStock}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowModal(true);
-                }}
-                className="w-full rounded-lg bg-foreground py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
-              >
-                {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
-              </button>
-            </div>
+            {!isAdmin && (
+              <div className="p-4 pt-0">
+                <button
+                  disabled={isOutOfStock}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowModal(true);
+                  }}
+                  className="w-full rounded-lg bg-foreground py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
+                >
+                  {isOutOfStock ? "Unavailable" : "অর্ডার করুন"}
+                </button>
+              </div>
+            )}
           </div>
         </Link>
       </motion.div>
 
-      <OrderModal
-        product={product}
-        open={showModal}
-        onClose={() => setShowModal(false)}
-      />
+      {!isAdmin && (
+        <OrderModal
+          product={product}
+          open={showModal}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </>
   );
 }

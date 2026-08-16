@@ -1,15 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import { Package, Eye, ChevronDown } from "lucide-react";
+import { Package, Eye, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { getAllOrders, updateOrderStatus } from "@/services/order.api";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
-import Pagination from "@/components/ui/Pagination";
 
 const statusOptions = [
   "pending",
@@ -34,42 +33,42 @@ export default function AdminOrders() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const perPage = 10;
+  const limit = 10;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-orders", page, statusFilter],
+    queryKey: ["admin-orders"],
     queryFn: async () => {
-      const res = await getAllOrders({ page, limit: perPage, status: statusFilter });
-      return res;
+      const res = await getAllOrders();
+      return Array.isArray(res) ? res : res.orders ?? [];
     },
   });
 
-  const orders = data?.orders ?? [];
-  const totalOrders = data?.totalOrders ?? 0;
-  const totalPages = data?.totalPages ?? 1;
-
-  useEffect(() => {
-    setPage(1);
-  }, [statusFilter]);
+  const orders = Array.isArray(data) ? data : [];
 
   const statusMutation = useMutation({
     mutationFn: ({ id, orderStatus }) => updateOrderStatus(id, orderStatus),
-    onMutate: async ({ id, orderStatus }) => {
-      await queryClient.cancelQueries({ queryKey: ["admin-orders"] });
-      const prev = queryClient.getQueryData(["admin-orders"]);
-      return { prev };
-    },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(["admin-orders"], ctx.prev);
-      toast.error("Failed to update status");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
-    },
     onSuccess: () => {
       toast.success("Order status updated");
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    },
+    onError: (err) => {
+      toast.error(err?.response?.data?.message || "Failed to update status");
     },
   });
+
+  const filteredOrders =
+    statusFilter === "all"
+      ? orders
+      : orders.filter((o) => o.orderStatus === statusFilter);
+
+  const totalPages = Math.ceil(filteredOrders.length / limit);
+  const paginatedOrders = filteredOrders.slice((page - 1) * limit, page * limit);
+
+  const statusCounts = orders.reduce((acc, o) => {
+    const s = o.orderStatus || "pending";
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, {});
 
   const formatDate = (d) =>
     new Date(d).toLocaleDateString("en-US", {
@@ -88,7 +87,7 @@ export default function AdminOrders() {
       </Helmet>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Orders ({totalOrders})
+          Orders ({filteredOrders.length})
         </h1>
       </div>
 
@@ -101,7 +100,7 @@ export default function AdminOrders() {
               : "border-border bg-card text-muted-foreground hover:bg-muted"
           }`}
         >
-          All
+          All ({orders.length})
         </button>
         {statusOptions.map((status) => (
           <button
@@ -114,6 +113,7 @@ export default function AdminOrders() {
             }`}
           >
             {formatStatus(status)}
+            {statusCounts[status] ? ` (${statusCounts[status]})` : ""}
           </button>
         ))}
       </div>
@@ -124,7 +124,7 @@ export default function AdminOrders() {
             <Skeleton key={i} className="h-16 w-full rounded-xl" />
           ))}
         </div>
-      ) : orders.length === 0 ? (
+      ) : filteredOrders.length === 0 ? (
         <div className="rounded-xl border border-border bg-card py-20 text-center">
           <Package className="mx-auto size-12 text-muted-foreground/30" />
           <p className="mt-3 text-sm text-muted-foreground">No orders found.</p>
@@ -145,7 +145,7 @@ export default function AdminOrders() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {orders.map((order, i) => (
+              {paginatedOrders.map((order, i) => (
                 <motion.tr
                   key={order._id}
                   initial={{ opacity: 0 }}
@@ -190,7 +190,7 @@ export default function AdminOrders() {
                           })
                         }
                         className={`appearance-none rounded-full border px-3 py-1 pr-7 text-xs font-medium ${
-                          statusColors[order.orderStatus] || "bg-gray-100 text-gray-800"
+                          statusColors[order.orderStatus] || "bg-muted text-foreground"
                         } cursor-pointer focus:outline-none`}
                       >
                         {statusOptions.map((s) => (
@@ -213,10 +213,36 @@ export default function AdminOrders() {
               ))}
             </tbody>
           </table>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-border px-4 py-3">
+              <p className="text-sm text-muted-foreground">
+                Showing {((page - 1) * limit) + 1}-{Math.min(page * limit, filteredOrders.length)} of {filteredOrders.length}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-      {totalOrders > perPage && (
-        <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       )}
     </div>
   );
