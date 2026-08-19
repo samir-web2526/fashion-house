@@ -5,8 +5,11 @@ const { warmUpCache } = require("../utils/cache");
 
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
-// Using standard MongoDB URI to bypass DNS SRV blocking issues
-const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0-shard-00-00.bb41v.mongodb.net:27017,cluster0-shard-00-01.bb41v.mongodb.net:27017,cluster0-shard-00-02.bb41v.mongodb.net:27017/?authSource=admin&replicaSet=atlas-imfz1t-shard-0&tls=true`;
+const dbUser = encodeURIComponent(process.env.DB_USER || "");
+const dbPass = encodeURIComponent(process.env.DB_PASS || "");
+
+// Using standard MongoDB URI to bypass DNS SRV blocking issues or environment variable
+const uri = process.env.MONGODB_URI || `mongodb://${dbUser}:${dbPass}@cluster0-shard-00-00.bb41v.mongodb.net:27017,cluster0-shard-00-01.bb41v.mongodb.net:27017,cluster0-shard-00-02.bb41v.mongodb.net:27017/?authSource=admin&replicaSet=atlas-imfz1t-shard-0&tls=true`;
 
 const client = new MongoClient(uri, {
     serverApi: {

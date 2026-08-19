@@ -1,6 +1,10 @@
 import FlashSale from "@/components/sections/FlashSale";
 import { getApiUrl } from "@/utils/getApiUrl";
 
+export const metadata = {
+  title: "Flash Sale",
+};
+
 export const dynamic = 'force-dynamic';
 
 async function fetchFlashSale() {

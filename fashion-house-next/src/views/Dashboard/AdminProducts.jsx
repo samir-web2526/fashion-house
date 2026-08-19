@@ -58,8 +58,11 @@ function getAllCategorySlugs(categories) {
   return [...new Set(slugs)];
 }
 
+import usePageTitle from "@/hooks/usePageTitle";
+
 export default function AdminProducts({ children }) {
   const { siteName } = useSettings();
+  usePageTitle("Admin Products");
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [thumbnailFile, setThumbnailFile] = useState(null);

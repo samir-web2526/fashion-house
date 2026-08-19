@@ -20,11 +20,25 @@ const bannerRoutes = require("./routes/banner.route");
 const app = express();
 const port = process.env.PORT || 5000;
 
+const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.replace(/\/$/, "") : "";
+const allowedOrigins = [
+  clientUrl,
+  "http://localhost:3000",
+  "http://localhost:3001",
+].filter(Boolean);
+
 app.use(
-    cors({
-        origin: process.env.CLIENT_URL,
-        credentials: true
-    })
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/$/, "");
+      if (allowedOrigins.includes(cleanOrigin) || process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  })
 );
 
 app.use(express.json({ limit: "10mb" }));

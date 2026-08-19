@@ -42,8 +42,11 @@ function CheckoutSkeleton() {
   );
 }
 
+import usePageTitle from "@/hooks/usePageTitle";
+
 export default function Checkout({ children }) {
   const { siteName } = useSettings();
+  usePageTitle("Checkout");
   const router = useRouter();
   const { refetchCartCount } = useCart();
 

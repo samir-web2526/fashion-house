@@ -31,9 +31,12 @@ function FlashSaleSkeleton() {
 
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
+import usePageTitle from "@/hooks/usePageTitle";
 
 export default function FlashSale({ initialData }) {
   const { siteName } = useSettings();
+  usePageTitle("Flash Sale");
+
   const { data, isLoading } = useQuery({
     queryKey: ["flash-sale"],
     queryFn: getFlashSaleProducts,

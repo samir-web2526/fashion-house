@@ -22,11 +22,14 @@ import { useAuth } from "@/hooks/useAuth";
 import useSettings from "@/hooks/useSettings";
 import { Helmet } from "react-helmet-async";
 
+import usePageTitle from "@/hooks/usePageTitle";
+
 export default function Login({ children }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const { fetchUser } = useAuth();
   const { siteName, logo } = useSettings();
+  usePageTitle("Login");
 
   const {
     register,

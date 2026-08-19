@@ -4,8 +4,11 @@ import Footer from "@/views/sharedPages/Footer";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
 
+import usePageTitle from "@/hooks/usePageTitle";
+
 export default function ReturnPolicy({ children }) {
   const { siteName } = useSettings();
+  usePageTitle("Return Policy");
   return (
     <div className="h-full overflow-y-auto bg-background">
       <Helmet>

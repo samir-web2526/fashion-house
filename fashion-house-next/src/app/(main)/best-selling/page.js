@@ -1,6 +1,10 @@
 import BestSellingProducts from "@/components/sections/BestSellingProducts";
 import { getApiUrl } from "@/utils/getApiUrl";
 
+export const metadata = {
+  title: "Best Selling Products",
+};
+
 export const dynamic = 'force-dynamic';
 
 async function fetchBestSelling() {

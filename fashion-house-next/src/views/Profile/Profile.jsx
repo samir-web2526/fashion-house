@@ -23,8 +23,11 @@ const profileSchema = z.object({
   address: z.string().min(3, "Address must be at least 3 characters").optional().or(z.literal("")),
 });
 
+import usePageTitle from "@/hooks/usePageTitle";
+
 export default function Profile({ children }) {
   const { siteName } = useSettings();
+  usePageTitle("My Profile");
   const { user, setUser } = useAuth();
   const router = useRouter();
 

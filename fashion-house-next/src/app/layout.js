@@ -12,7 +12,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Zayan Classic | Premium Fashion & Clothing",
+  title: {
+    default: "Zayan Classic | Premium Fashion & Clothing",
+    template: "%s | Zayan Classic",
+  },
   description: "Discover the latest trends in fashion with Zayan Classic.",
 };
 

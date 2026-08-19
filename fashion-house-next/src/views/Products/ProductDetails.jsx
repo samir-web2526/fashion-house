@@ -47,6 +47,8 @@ function ProductSkeleton() {
   );
 }
 
+import usePageTitle from "@/hooks/usePageTitle";
+
 export default function ProductDetails({ children }) {
   const { siteName } = useSettings();
   const { id } = useParams();
@@ -64,6 +66,8 @@ export default function ProductDetails({ children }) {
     queryFn: () => getProductById(id),
     enabled: !!id,
   });
+
+  usePageTitle(product?.title || "Product Details");
 
 
 

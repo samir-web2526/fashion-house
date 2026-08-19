@@ -15,9 +15,11 @@ import useSettings from "@/hooks/useSettings";
 import { useEffect } from "react";
 
 import { Helmet } from "react-helmet-async";
+import usePageTitle from "@/hooks/usePageTitle";
 
 export default function Home({ initialData }) {
   const { siteName } = useSettings();
+  usePageTitle("Home");
 
   return (
     <div className="h-full">

@@ -43,8 +43,11 @@ function getItemStatus(item) {
   return { ok: true, message: "" };
 }
 
+import usePageTitle from "@/hooks/usePageTitle";
+
 export default function Cart({ children }) {
   const { siteName } = useSettings();
+  usePageTitle("Shopping Cart");
   const router = useRouter();
   const queryClient = useQueryClient();
   const { refetchCartCount } = useCart();

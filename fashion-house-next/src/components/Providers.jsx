@@ -27,32 +27,32 @@ export default function Providers({ children }) {
             <QueryClientProvider client={queryClient}>
               {children}
               <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 3000,
-                style: {
-                  borderRadius: "10px",
-                  background: "#1a1a1a",
-                  color: "#fff",
-                },
-                success: {
-                  iconTheme: {
-                    primary: "#fff",
-                    secondary: "#1a1a1a",
+                position="top-right"
+                toastOptions={{
+                  duration: 3000,
+                  style: {
+                    borderRadius: "10px",
+                    background: "#1a1a1a",
+                    color: "#fff",
                   },
-                },
-                error: {
-                  iconTheme: {
-                    primary: "#fff",
-                    secondary: "#1a1a1a",
+                  success: {
+                    iconTheme: {
+                      primary: "#fff",
+                      secondary: "#1a1a1a",
+                    },
                   },
-                },
-              }}
-            />
-          </QueryClientProvider>
-        </CartProvider>
-      </ThemeProvider>
-    </AuthProvider>
-  </HelmetProvider>
-);
+                  error: {
+                    iconTheme: {
+                      primary: "#fff",
+                      secondary: "#1a1a1a",
+                    },
+                  },
+                }}
+              />
+            </QueryClientProvider>
+          </CartProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </HelmetProvider>
+  );
 }

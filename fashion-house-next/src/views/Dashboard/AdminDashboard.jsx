@@ -63,8 +63,11 @@ function DashboardSkeleton() {
   );
 }
 
+import usePageTitle from "@/hooks/usePageTitle";
+
 export default function AdminDashboard() {
   const { siteName } = useSettings();
+  usePageTitle("Admin Dashboard");
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ["admin-dashboard-stats"],

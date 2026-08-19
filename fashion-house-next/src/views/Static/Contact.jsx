@@ -5,8 +5,11 @@ import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
 import Footer from "@/views/sharedPages/Footer";
 
+import usePageTitle from "@/hooks/usePageTitle";
+
 export default function Contact({ children }) {
   const { siteName, contactEmail, contactPhone, address, googleMapLink } = useSettings();
+  usePageTitle("Contact Us");
   return (
     <div className="h-full overflow-y-auto bg-background">
       <Helmet>

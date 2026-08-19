@@ -37,8 +37,11 @@ const SORT_OPTIONS = [
   { label: "Rating", value: "rating" },
 ];
 
+import usePageTitle from "@/hooks/usePageTitle";
+
 export default function Products({ initialCategories, initialProducts }) {
   const { siteName } = useSettings();
+  usePageTitle("All Products");
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();

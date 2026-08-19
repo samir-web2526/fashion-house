@@ -1,6 +1,10 @@
 import Home from "@/views/Home/Home";
 import { getApiUrl } from "@/utils/getApiUrl";
 
+export const metadata = {
+  title: "Home",
+};
+
 export const dynamic = 'force-dynamic';
 
 async function fetchHomeData() {

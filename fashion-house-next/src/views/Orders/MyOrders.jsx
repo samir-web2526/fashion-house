@@ -325,8 +325,11 @@ function OrderCard({ order, copied, onCopy }) {
   );
 }
 
-export default function MyOrders({ children }) {
+import usePageTitle from "@/hooks/usePageTitle";
+
+export default function MyOrders() {
   const { siteName } = useSettings();
+  usePageTitle("Track Order");
   const router = useRouter();
   const [trackValue, setTrackValue] = useState("");
   const [order, setOrder] = useState(null);

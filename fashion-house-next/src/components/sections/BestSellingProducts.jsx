@@ -28,9 +28,12 @@ function BestSellingSkeleton() {
 
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
+import usePageTitle from "@/hooks/usePageTitle";
 
 export default function BestSellingProducts({ initialData }) {
   const { siteName } = useSettings();
+  usePageTitle("Best Selling Products");
+
   const { data, isLoading } = useQuery({
     queryKey: ["best-selling-products"],
     queryFn: getBestSellingProducts,

@@ -41,8 +41,11 @@ const VALUES = [
   },
 ];
 
+import usePageTitle from "@/hooks/usePageTitle";
+
 export default function About({ children }) {
   const { siteName } = useSettings();
+  usePageTitle("About Us");
   return (
     <div className="h-full overflow-y-auto bg-background">
       <Helmet>
