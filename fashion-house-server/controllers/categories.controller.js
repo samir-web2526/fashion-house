@@ -1,5 +1,6 @@
 const { getDB } = require("../config/db");
 const { ObjectId } = require("mongodb");
+const { withCache, clearCache } = require("../utils/cache");
 
 const createCategory = async (req, res) => {
     try {
@@ -16,6 +17,7 @@ const createCategory = async (req, res) => {
         };
 
         const result = await categoriesCollection.insertOne(category);
+        clearCache();
 
         res.status(201).send({
             message: "Category created successfully",
@@ -33,26 +35,28 @@ const createCategory = async (req, res) => {
 
 const getCategoriesWithCounts = async (req, res) => {
     try {
-        const db = getDB();
-        const categoriesCollection = db.collection("categories");
-        const productsCollection = db.collection("products");
+        const categoriesWithCounts = await withCache("categoriesWithCounts", 300, async () => {
+            const db = getDB();
+            const categoriesCollection = db.collection("categories");
+            const productsCollection = db.collection("products");
 
-        const categories = await categoriesCollection.find().sort({ createdAt: -1 }).toArray();
+            const categories = await categoriesCollection.find().sort({ createdAt: -1 }).toArray();
 
-        const countResult = await productsCollection.aggregate([
-            { $group: { _id: "$category", count: { $sum: 1 } } }
-        ]).toArray();
+            const countResult = await productsCollection.aggregate([
+                { $group: { _id: "$category", count: { $sum: 1 } } }
+            ]).toArray();
 
-        const countMap = new Map(countResult.map(r => [r._id, r.count]));
+            const countMap = new Map(countResult.map(r => [r._id, r.count]));
 
-        const categoriesWithCounts = categories.map(parent => {
-            let totalCount = 0;
-            for (const child of parent.children ?? []) {
-                for (const catSlug of child.categories ?? []) {
-                    totalCount += countMap.get(catSlug) ?? 0;
+            return categories.map(parent => {
+                let totalCount = 0;
+                for (const child of parent.children ?? []) {
+                    for (const catSlug of child.categories ?? []) {
+                        totalCount += countMap.get(catSlug) ?? 0;
+                    }
                 }
-            }
-            return { ...parent, productCount: totalCount };
+                return { ...parent, productCount: totalCount };
+            });
         });
 
         res.send(categoriesWithCounts);
@@ -79,34 +83,38 @@ const getAllCategories = async (req, res) => {
             ];
         }
 
-        if (page && limit) {
-            const skip = (page - 1) * limit;
-            const totalCategories = await categoriesCollection.countDocuments(query);
+        const cacheKey = `categories_${page}_${limit}_${search}`;
+        const result = await withCache(cacheKey, 300, async () => {
+            if (page && limit) {
+                const skip = (page - 1) * limit;
+                const totalCategories = await categoriesCollection.countDocuments(query);
 
-            const categories = await categoriesCollection
-                .find(query)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit)
-                .toArray();
+                const categories = await categoriesCollection
+                    .find(query)
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit)
+                    .toArray();
 
-            res.send({
-                totalCategories,
-                currentPage: page,
-                totalPages: Math.ceil(totalCategories / limit),
-                categories
-            });
-        } else {
-            const categories = await categoriesCollection
-                .find(query)
-                .sort({ createdAt: -1 })
-                .toArray();
+                return {
+                    totalCategories,
+                    currentPage: page,
+                    totalPages: Math.ceil(totalCategories / limit),
+                    categories
+                };
+            } else {
+                const categories = await categoriesCollection
+                    .find(query)
+                    .sort({ createdAt: -1 })
+                    .toArray();
 
-            res.send(categories);
-        }
+                return categories;
+            }
+        });
+
+        res.send(result);
 
     } catch (error) {
-
         res.status(500).send({
             message: "Internal Server Error"
         });
@@ -178,6 +186,8 @@ const updateCategory = async (req, res) => {
             });
         }
 
+        clearCache();
+
         res.send({
             message: "Category updated successfully"
         });
@@ -213,6 +223,8 @@ const deleteCategory = async (req, res) => {
                 message: "Category not found"
             });
         }
+
+        clearCache();
 
         res.send({
             message: "Category deleted successfully"

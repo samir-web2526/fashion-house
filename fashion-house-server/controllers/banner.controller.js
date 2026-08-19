@@ -1,5 +1,6 @@
 const { ObjectId } = require("mongodb");
 const { getDB } = require("../config/db");
+const { withCache, clearCache } = require("../utils/cache");
 
 const createBanner = async (req, res) => {
     try {
@@ -19,6 +20,8 @@ const createBanner = async (req, res) => {
 
         const result = await bannersCollection.insertOne(newBanner);
 
+        clearCache();
+
         res.status(201).send({
             message: "Banner created successfully",
             insertedId: result.insertedId
@@ -31,9 +34,11 @@ const createBanner = async (req, res) => {
 
 const getAllBanners = async (req, res) => {
     try {
-        const db = getDB();
-        const bannersCollection = db.collection("banners");
-        const banners = await bannersCollection.find({}).sort({ createdAt: -1 }).toArray();
+        const banners = await withCache("banners", 300, async () => {
+            const db = getDB();
+            const bannersCollection = db.collection("banners");
+            return await bannersCollection.find({}).sort({ createdAt: -1 }).toArray();
+        });
         res.send(banners);
     } catch (error) {
         console.log(error);
@@ -75,6 +80,7 @@ const updateBanner = async (req, res) => {
         if (result.matchedCount === 0) {
             return res.status(404).send({ message: "Banner not found" });
         }
+        clearCache();
         res.send({ message: "Banner updated successfully" });
     } catch (error) {
         console.log(error);
@@ -94,6 +100,7 @@ const deleteBanner = async (req, res) => {
         if (result.deletedCount === 0) {
             return res.status(404).send({ message: "Banner not found" });
         }
+        clearCache();
         res.send({ message: "Banner deleted successfully" });
     } catch (error) {
         console.log(error);

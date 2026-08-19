@@ -10,6 +10,7 @@ const {
     updateOrderStatus,
     cancelOrder,
     sendInvoice,
+    getDashboardStats,
 } = require("../controllers/orders.controller");
 
 const validate = require("../middlewares/validate");
@@ -58,6 +59,13 @@ router.get(
     verifyToken,
     verifyAdmin,
     getAllOrders
+);
+
+router.get(
+    "/dashboard-stats",
+    verifyToken,
+    verifyAdmin,
+    getDashboardStats
 );
 
 router.get(

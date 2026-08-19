@@ -1,0 +1,73 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { FaWhatsapp, FaArrowUp } from "react-icons/fa";
+import { ShoppingCart } from "lucide-react";
+import useCart from "@/hooks/useCart";
+import { useAuth } from "@/hooks/useAuth";
+
+export default function FloatingButtons() {
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const { cartCount } = useCart();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 200);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const openCartDrawer = () => {
+    window.dispatchEvent(new Event("open-cart-drawer"));
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 z-9999 flex flex-col gap-3 items-center sm:bottom-8 sm:right-8 sm:gap-4">
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-110 sm:h-14 sm:w-14 cursor-pointer"
+          aria-label="Scroll to top"
+        >
+          <FaArrowUp className="text-lg sm:text-2xl" />
+        </button>
+      )}
+
+      <a
+        href="https://wa.me/+8801940005000"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-110 sm:h-14 sm:w-14"
+        aria-label="Contact us on WhatsApp"
+      >
+        <FaWhatsapp className="text-lg sm:text-2xl" />
+      </a>
+
+      {!isAdmin && (
+        <button
+          type="button"
+          onClick={openCartDrawer}
+          className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-2xl transition hover:bg-primary hover:text-white sm:h-14 sm:w-14 cursor-pointer"
+          aria-label="Open cart drawer"
+        >
+          <div className="relative">
+            <ShoppingCart className="size-4 sm:size-5" />
+            {cartCount > 0 && (
+              <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
+                {cartCount}
+              </span>
+            )}
+          </div>
+        </button>
+      )}
+    </div>
+  );
+}

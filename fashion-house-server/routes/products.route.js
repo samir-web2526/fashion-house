@@ -8,7 +8,9 @@ const {
     deleteProduct,
     getFlashSaleProducts,
     getBestSellingProducts,
-    getNewArrivals
+    getNewArrivals,
+    getLatestReviews,
+    getFeaturedProducts
 } = require("../controllers/products.controller");
 
 const validate = require("../middlewares/validate");
@@ -27,6 +29,10 @@ router.get("/flash-sale", getFlashSaleProducts);
 router.get("/best-sellers", getBestSellingProducts);
 
 router.get("/new-arrivals", getNewArrivals);
+
+router.get("/featured", getFeaturedProducts);
+
+router.get("/reviews", getLatestReviews);
 
 router.post(
     "/",

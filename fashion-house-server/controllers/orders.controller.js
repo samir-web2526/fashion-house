@@ -1,6 +1,7 @@
 const { ObjectId } = require("mongodb");
 const { getDB } = require("../config/db");
 const { sendMail } = require("../config/mail");
+const { withCache, clearCache } = require("../utils/cache");
 
 const createOrder = async (req, res) => {
     try {
@@ -123,6 +124,8 @@ const createOrder = async (req, res) => {
             userId: new ObjectId(req.user.id),
         });
 
+        clearCache();
+
         res.status(201).send({
             message: "Order placed successfully",
             insertedId: result.insertedId,
@@ -210,6 +213,7 @@ const createGuestOrder = async (req, res) => {
         };
 
         const result = await ordersCollection.insertOne(order);
+        clearCache();
 
         res.status(201).send({
             message: "Order placed successfully",
@@ -336,36 +340,55 @@ const getAllOrders = async (req, res) => {
         const db = getDB();
         const ordersCollection = db.collection("orders");
 
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const page = req.query.page ? parseInt(req.query.page) : null;
+        const limit = req.query.limit ? parseInt(req.query.limit) : null;
         const status = req.query.status || "";
-        const skip = (page - 1) * limit;
 
         const query = {};
         if (status && status !== "all") {
             query.orderStatus = status;
         }
 
-        const totalOrders = await ordersCollection.countDocuments(query);
+        const cacheKey = `orders_${page}_${limit}_${status}`;
+        const result = await withCache(cacheKey, 300, async () => {
+            if (page && limit) {
+                const skip = (page - 1) * limit;
+                const totalOrders = await ordersCollection.countDocuments(query);
 
-        const orders = await ordersCollection
-            .find(query)
-            .sort({
-                createdAt: -1
-            })
-            .skip(skip)
-            .limit(limit)
-            .toArray();
+                const orders = await ordersCollection
+                    .find(query)
+                    .sort({
+                        createdAt: -1
+                    })
+                    .skip(skip)
+                    .limit(limit)
+                    .toArray();
 
-        res.send({
-            totalOrders,
-            currentPage: page,
-            totalPages: Math.ceil(totalOrders / limit),
-            orders
+                return {
+                    totalOrders,
+                    currentPage: page,
+                    totalPages: Math.ceil(totalOrders / limit),
+                    orders
+                };
+            } else {
+                const orders = await ordersCollection
+                    .find(query)
+                    .sort({
+                        createdAt: -1
+                    })
+                    .toArray();
+
+                return {
+                    totalOrders: orders.length,
+                    orders
+                };
+            }
         });
 
-    } catch (error) {
+        res.send(result);
 
+    } catch (error) {
+        console.error(error);
         res.status(500).send({
             message: "Internal Server Error"
         });
@@ -375,6 +398,12 @@ const getAllOrders = async (req, res) => {
 const getSingleOrder = async (req, res) => {
     try {
         const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).send({
+                message: "Invalid order id"
+            });
+        }
 
         const db = getDB();
         const ordersCollection = db.collection("orders");
@@ -413,6 +442,12 @@ const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { orderStatus } = req.body;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).send({
+                message: "Invalid order id"
+            });
+        }
 
         const validStatuses = [
             "pending",
@@ -496,6 +531,8 @@ const updateOrderStatus = async (req, res) => {
             }
         );
 
+        clearCache();
+
         res.send({
             message: "Order status updated successfully",
         });
@@ -512,6 +549,12 @@ const updateOrderStatus = async (req, res) => {
 const cancelOrder = async (req, res) => {
     try {
         const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).send({
+                message: "Invalid order id"
+            });
+        }
 
         const db = getDB();
         const ordersCollection = db.collection("orders");
@@ -553,6 +596,8 @@ const cancelOrder = async (req, res) => {
             }
         );
 
+        clearCache();
+
         res.send({
             message: "Order cancelled successfully"
         });
@@ -569,6 +614,12 @@ const cancelOrder = async (req, res) => {
 const sendInvoice = async (req, res) => {
     try {
         const { id } = req.params;
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).send({
+                message: "Invalid order id"
+            });
+        }
 
         const db = getDB();
         const ordersCollection = db.collection("orders");
@@ -779,6 +830,84 @@ const sendInvoice = async (req, res) => {
         res.status(500).send({ message: "Failed to send invoice" });
     }
 };
+ 
+const getDashboardStats = async (req, res) => {
+    try {
+        const db = getDB();
+        const result = await withCache("dashboardStats", 300, async () => {
+            const productsCollection = db.collection("products");
+            const categoriesCollection = db.collection("categories");
+            const ordersCollection = db.collection("orders");
+
+            const totalProducts = await productsCollection.estimatedDocumentCount();
+            const totalCategories = await categoriesCollection.countDocuments();
+            const totalOrders = await ordersCollection.countDocuments();
+
+            const stats = await ordersCollection.aggregate([
+                {
+                    $facet: {
+                        statusCounts: [
+                            {
+                                $group: {
+                                    _id: "$orderStatus",
+                                    count: { $sum: 1 }
+                                }
+                            }
+                        ],
+                        revenue: [
+                            {
+                                $match: {
+                                    orderStatus: { $ne: "cancelled" }
+                                }
+                            },
+                            {
+                                $group: {
+                                    _id: null,
+                                    total: { $sum: "$totalPrice" }
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]).toArray();
+
+            const facetResult = stats[0] || {};
+            const ordersByStatus = {
+                pending: 0,
+                confirmed: 0,
+                processing: 0,
+                shipped: 0,
+                delivered: 0,
+                cancelled: 0
+            };
+
+            if (facetResult.statusCounts) {
+                facetResult.statusCounts.forEach(item => {
+                    const status = item._id || "pending";
+                    ordersByStatus[status] = item.count;
+                });
+            }
+
+            const totalRevenue = facetResult.revenue?.[0]?.total || 0;
+
+            return {
+                totalProducts,
+                totalCategories,
+                totalOrders,
+                totalRevenue,
+                ordersByStatus
+            };
+        });
+
+        res.send(result);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({
+            message: "Internal Server Error"
+        });
+    }
+};
 
 module.exports = {
     createOrder,
@@ -790,4 +919,5 @@ module.exports = {
     updateOrderStatus,
     cancelOrder,
     sendInvoice,
+    getDashboardStats,
 };

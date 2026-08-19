@@ -8,12 +8,19 @@ const {
 } = require("../controllers/cart.controller");
 
 const verifyToken = require("../middlewares/verifyToken");
+const validate = require("../middlewares/validate");
+
+const {
+    addCartSchema,
+    updateCartSchema
+} = require("../validations/cart.validation");
 
 const router = express.Router();
 
 router.post(
     "/",
     verifyToken,
+    validate(addCartSchema),
     addToCart
 );
 
@@ -26,6 +33,7 @@ router.get(
 router.patch(
     "/:productId",
     verifyToken,
+    validate(updateCartSchema),
     updateCart
 );
 

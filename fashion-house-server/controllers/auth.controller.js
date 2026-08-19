@@ -2,75 +2,6 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { ObjectId } = require("mongodb");
 const { getDB } = require("../config/db");
-const { OAuth2Client } = require("google-auth-library");
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-const register = async (req, res) => {
-    try {
-        const {
-            name,
-            email,
-            password,
-            profilePhoto,
-            phone,
-            address
-        } = req.body;
-
-        const db = getDB();
-        const usersCollection = db.collection("users");
-
-        const normalizedEmail = email.trim().toLowerCase();
-
-        const existingUser = await usersCollection.findOne({
-            email: normalizedEmail
-        });
-
-        if (existingUser) {
-            return res.status(409).json({
-                success: false,
-                message: "Validation failed",
-                errors: [
-                    {
-                        field: "email",
-                        message: "Email already exists"
-                    }
-                ]
-            });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const user = {
-            name: name.trim(),
-            email: normalizedEmail,
-            password: hashedPassword,
-            provider: "local",
-            profilePhoto,
-            phone,
-            address,
-            role: "customer",
-            isVerified: false,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
-
-        const result = await usersCollection.insertOne(user);
-
-        res.status(201).json({
-            success: true,
-            message: "User registered successfully",
-            insertedId: result.insertedId
-        });
-
-    } catch (error) {
-        console.log(error);
-
-        res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        });
-    }
-};
 
 const login = async (req, res) => {
     try {
@@ -85,13 +16,6 @@ const login = async (req, res) => {
         const user = await usersCollection.findOne({
             email: normalizedEmail
         });
-
-        if (user && user.provider === "google") {
-    return res.status(400).json({
-        success: false,
-        message: "Please continue with Google."
-    });
-}
 
         if (!user) {
     return res.status(401).json({
@@ -189,108 +113,7 @@ const login = async (req, res) => {
     }
 };
 
-const googleLogin = async (req, res) => {
-    try {
-        const { token } = req.body;
 
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
-
-        const payload = ticket.getPayload();
-
-        const db = getDB();
-        const usersCollection = db.collection("users");
-
-        const email = payload.email.toLowerCase();
-
-        let user = await usersCollection.findOne({ email });
-
-        if (!user) {
-
-            const newUser = {
-                name: payload.name,
-                email,
-                password: null,
-                provider: "google",
-                profilePhoto: payload.picture,
-                phone: "",
-                address: "",
-                role: "customer",
-                googleId: payload.sub,
-                isVerified: true,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
-
-            const result = await usersCollection.insertOne(newUser);
-
-            user = {
-                ...newUser,
-                _id: result.insertedId
-            };
-        }
-
-        const accessToken = jwt.sign(
-            {
-                id: user._id.toString(),
-                email: user.email,
-                role: user.role
-            },
-            process.env.JWT_SECRET,
-            {
-                expiresIn: "15m"
-            }
-        );
-
-        const refreshToken = jwt.sign(
-            {
-                id: user._id.toString()
-            },
-            process.env.JWT_REFRESH_SECRET,
-            {
-                expiresIn: "7d"
-            }
-        );
-
-        res.cookie("accessToken", accessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite:
-                process.env.NODE_ENV === "production"
-                    ? "none"
-                    : "lax",
-            maxAge: 15 * 60 * 1000
-        });
-
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite:
-                process.env.NODE_ENV === "production"
-                    ? "none"
-                    : "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
-
-        return res.status(200).json({
-            success: true,
-            message: "Google login successful",
-            accessToken,
-            refreshToken
-        });
-
-    } catch (error) {
-
-        console.log(error);
-
-        return res.status(401).json({
-            success: false,
-            message: "Google authentication failed"
-        });
-    }
-};
 
 const logout = async (req, res) => {
     try {
@@ -412,9 +235,7 @@ const refreshToken = async (req, res) => {
 };
 
 module.exports = {
-    register,
     login,
-    googleLogin,
     logout,
     refreshToken
 };

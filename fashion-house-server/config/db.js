@@ -1,9 +1,12 @@
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const dns = require('dns');
+const { setupIndexes } = require("../utils/setupIndexes");
+const { warmUpCache } = require("../utils/cache");
 
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bb41v.mongodb.net/?appName=Cluster0`;
+// Using standard MongoDB URI to bypass DNS SRV blocking issues
+const uri = `mongodb://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0-shard-00-00.bb41v.mongodb.net:27017,cluster0-shard-00-01.bb41v.mongodb.net:27017,cluster0-shard-00-02.bb41v.mongodb.net:27017/?authSource=admin&replicaSet=atlas-imfz1t-shard-0&tls=true`;
 
 const client = new MongoClient(uri, {
     serverApi: {
@@ -18,9 +21,16 @@ let db;
 async function connectDB() {
     if (db) return db;
     await client.connect();
-    db = client.db("infinityStore");
+    db = client.db("fasionHouse");
 
     console.log("MongoDB Connected");
+
+    // Setup Indexes
+    await setupIndexes(db);
+
+    // Warm up cache in background on startup
+    warmUpCache(db).catch(err => console.error("Startup warmup failed:", err));
+
     return db;
 }
 
