@@ -196,7 +196,7 @@ export default function AdminProductDetails({ children }) {
       router.push("/dashboard/products");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries();
     },
   });
 

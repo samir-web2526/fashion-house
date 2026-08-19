@@ -160,7 +160,7 @@ export default function AdminProducts({ children }) {
           totalProducts: (old.totalProducts || 0) + 1,
         };
       });
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries();
       setShowForm(false);
       resetForm();
     },
@@ -204,7 +204,7 @@ export default function AdminProducts({ children }) {
       setDeletingId(null);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      queryClient.invalidateQueries();
     },
   });
 

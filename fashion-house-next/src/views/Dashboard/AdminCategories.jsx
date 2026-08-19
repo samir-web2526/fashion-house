@@ -174,7 +174,7 @@ export default function AdminCategories({ children }) {
       setDeletingId(null);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
+      queryClient.invalidateQueries();
     },
   });
 
