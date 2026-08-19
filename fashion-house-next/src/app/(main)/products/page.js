@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 async function fetchProductsData() {
   const baseUrl = getApiUrl();
-  
+
   try {
     const [categoriesRes, productsRes] = await Promise.all([
       fetch(`${baseUrl}/categories`, { next: { revalidate: 3600 } }),
@@ -28,7 +28,7 @@ async function fetchProductsData() {
 
 export default async function Page() {
   const initialData = await fetchProductsData();
-  
+
   return (
     <Suspense fallback={<div className="p-8 text-center">Loading Products...</div>}>
       <Products initialCategories={initialData.categoriesData} initialProducts={initialData.productsData} />

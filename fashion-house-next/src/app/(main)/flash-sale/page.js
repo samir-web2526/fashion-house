@@ -16,7 +16,7 @@ async function fetchFlashSale() {
 
 export default async function Page() {
   const initialData = await fetchFlashSale();
-  
+
   return (
     <div className="min-h-screen bg-background pt-8 pb-16">
       <FlashSale initialData={initialData} />

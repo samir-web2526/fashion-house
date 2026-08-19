@@ -5,13 +5,13 @@ export const dynamic = 'force-dynamic';
 
 async function fetchHomeData() {
   const baseUrl = getApiUrl();
-  
+
   try {
     const [
-      categoriesRes, 
-      newArrivalsRes, 
-      bestSellingRes, 
-      flashSaleRes, 
+      categoriesRes,
+      newArrivalsRes,
+      bestSellingRes,
+      flashSaleRes,
       reviewsRes,
       bannersRes
     ] = await Promise.all([
@@ -46,6 +46,6 @@ async function fetchHomeData() {
 
 export default async function Page() {
   const initialData = await fetchHomeData();
-  
+
   return <Home initialData={initialData} />;
 }

@@ -16,7 +16,7 @@ async function fetchBestSelling() {
 
 export default async function Page() {
   const initialData = await fetchBestSelling();
-  
+
   return (
     <div className="min-h-screen bg-background pt-8 pb-16">
       <BestSellingProducts initialData={initialData} />

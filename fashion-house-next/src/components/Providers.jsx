@@ -7,6 +7,8 @@ import { CartProvider } from "@/context/CartContext";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import { Toaster } from "react-hot-toast";
 
+import { HelmetProvider } from "react-helmet-async";
+
 export default function Providers({ children }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
@@ -18,12 +20,13 @@ export default function Providers({ children }) {
   }));
 
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <CartProvider>
-          <QueryClientProvider client={queryClient}>
-            {children}
-            <Toaster
+    <HelmetProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <CartProvider>
+            <QueryClientProvider client={queryClient}>
+              {children}
+              <Toaster
               position="top-right"
               toastOptions={{
                 duration: 3000,
@@ -50,5 +53,6 @@ export default function Providers({ children }) {
         </CartProvider>
       </ThemeProvider>
     </AuthProvider>
-  );
+  </HelmetProvider>
+);
 }
