@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 async function fetchFlashSale() {
   try {
     const baseUrl = getApiUrl();
-    const res = await fetch(`${baseUrl}/products/flash-sale`, { next: { revalidate: 10 } });
+    const res = await fetch(`${baseUrl}/products/flash-sale`, { cache: "no-store" });
     return res.ok ? await res.json() : { products: [] };
   } catch (err) {
     console.error("Failed to fetch flash-sale products:", err.message);

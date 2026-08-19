@@ -13,8 +13,8 @@ async function fetchProductsData() {
 
   try {
     const [categoriesRes, productsRes] = await Promise.all([
-      fetch(`${baseUrl}/categories`, { next: { revalidate: 3600 } }),
-      fetch(`${baseUrl}/products?page=1&limit=12&sort=newest`, { next: { revalidate: 3600 } }),
+      fetch(`${baseUrl}/categories`, { next: { revalidate: 10 } }),
+      fetch(`${baseUrl}/products?page=1&limit=12&sort=newest`, { next: { revalidate: 10 } }),
     ]);
 
     return {
