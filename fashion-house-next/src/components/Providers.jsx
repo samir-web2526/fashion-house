@@ -6,8 +6,13 @@ import AuthProvider from "@/context/AuthProvider";
 import { CartProvider } from "@/context/CartContext";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import { Toaster } from "react-hot-toast";
-
 import { HelmetProvider } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
+
+function DynamicFaviconUpdater() {
+  useSettings();
+  return null;
+}
 
 export default function Providers({ children }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -25,6 +30,7 @@ export default function Providers({ children }) {
         <ThemeProvider>
           <CartProvider>
             <QueryClientProvider client={queryClient}>
+              <DynamicFaviconUpdater />
               {children}
               <Toaster
                 position="top-right"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getSettings } from "../services/settings.api";
 
@@ -9,9 +10,23 @@ const useSettings = () => {
     queryFn: getSettings,
   });
 
+  const logo = data?.logo || null;
+
+  useEffect(() => {
+    if (logo && typeof document !== "undefined") {
+      let link = document.querySelector("link[rel*='icon']");
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = "shortcut icon";
+        document.head.appendChild(link);
+      }
+      link.href = logo;
+    }
+  }, [logo]);
+
   return {
-    siteName: data?.siteName || "",
-    logo: data?.logo || null,
+    siteName: data?.siteName || "Zayan Classic",
+    logo,
     contactEmail: data?.contactEmail || "",
     contactPhone: data?.contactPhone || "",
     address: data?.address || "",
