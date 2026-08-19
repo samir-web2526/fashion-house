@@ -29,7 +29,11 @@ function FlashSaleSkeleton() {
   );
 }
 
+import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
+
 export default function FlashSale({ initialData }) {
+  const { siteName } = useSettings();
   const { data, isLoading } = useQuery({
     queryKey: ["flash-sale"],
     queryFn: getFlashSaleProducts,
@@ -41,6 +45,9 @@ export default function FlashSale({ initialData }) {
 
   return (
     <section id="flash-sale" className="relative overflow-hidden bg-linear-to-b from-gray-100/80 via-background to-background py-16 sm:py-20 dark:from-gray-900/20">
+      <Helmet>
+        <title>{siteName ? `Flash Sale | ${siteName}` : "Flash Sale - Fashion House"}</title>
+      </Helmet>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,oklch(0.5_0_0/8%),transparent)]" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

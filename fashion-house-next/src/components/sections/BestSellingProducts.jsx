@@ -26,7 +26,11 @@ function BestSellingSkeleton() {
   );
 }
 
+import { Helmet } from "react-helmet-async";
+import useSettings from "@/hooks/useSettings";
+
 export default function BestSellingProducts({ initialData }) {
+  const { siteName } = useSettings();
   const { data, isLoading } = useQuery({
     queryKey: ["best-selling-products"],
     queryFn: getBestSellingProducts,
@@ -37,6 +41,9 @@ export default function BestSellingProducts({ initialData }) {
 
   return (
     <section id="best-selling" className="bg-background pb-16 pt-6 sm:pb-20 sm:pt-8">
+      <Helmet>
+        <title>{siteName ? `Best Selling Products | ${siteName}` : "Best Selling Products - Fashion House"}</title>
+      </Helmet>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}

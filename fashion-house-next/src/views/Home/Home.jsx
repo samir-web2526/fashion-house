@@ -14,11 +14,16 @@ import useSettings from "@/hooks/useSettings";
 // 
 import { useEffect } from "react";
 
+import { Helmet } from "react-helmet-async";
+
 export default function Home({ initialData }) {
   const { siteName } = useSettings();
 
   return (
     <div className="h-full">
+      <Helmet>
+        <title>{siteName ? `${siteName} | Home` : "Home - Fashion House"}</title>
+      </Helmet>
       <Hero initialData={initialData?.bannersData} />
       <NewArrivals initialData={initialData?.newArrivalsData} />
       <Categories initialData={initialData?.categoriesData} />
