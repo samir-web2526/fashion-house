@@ -149,7 +149,7 @@ const getAllProducts = async (req, res) => {
         }
 
         const cacheKey = `products_${page}_${limit}_${search}_${category}_${brand}_${sort}`;
-        const result = await withCache(cacheKey, 300, async () => {
+        const result = await withCache(cacheKey, 15, async () => {
             if (page && limit) {
                 const skip = (page - 1) * limit;
                 const totalProducts = Object.keys(query).length === 0 
@@ -344,7 +344,7 @@ const getFlashSaleProducts = async (req, res) => {
 
 const getBestSellingProducts = async (req, res) => {
     try {
-        const result = await withCache("bestSellingProducts", 60, async () => {
+        const result = await withCache("bestSellingProducts", 15, async () => {
             const db = getDB();
             const productsCollection = db.collection("products");
             const ordersCollection = db.collection("orders");
@@ -432,7 +432,7 @@ const getBestSellingProducts = async (req, res) => {
 
 const getNewArrivals = async (req, res) => {
     try {
-        const products = await withCache("newArrivals", 60, async () => {
+        const products = await withCache("newArrivals", 15, async () => {
             const db = getDB();
             const productsCollection = db.collection("products");
 
@@ -455,7 +455,7 @@ const getNewArrivals = async (req, res) => {
 
 const getLatestReviews = async (req, res) => {
     try {
-        const reviews = await withCache("latestReviews", 60, async () => {
+        const reviews = await withCache("latestReviews", 15, async () => {
             const db = getDB();
             const productsCollection = db.collection("products");
 
@@ -478,7 +478,7 @@ const getLatestReviews = async (req, res) => {
 
 const getFeaturedProducts = async (req, res) => {
     try {
-        const products = await withCache("featuredProducts", 60, async () => {
+        const products = await withCache("featuredProducts", 15, async () => {
             const db = getDB();
             const productsCollection = db.collection("products");
 

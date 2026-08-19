@@ -351,7 +351,7 @@ const getAllOrders = async (req, res) => {
         }
 
         const cacheKey = `orders_${page}_${limit}_${status}`;
-        const result = await withCache(cacheKey, 300, async () => {
+        const result = await withCache(cacheKey, 15, async () => {
             if (page && limit) {
                 const skip = (page - 1) * limit;
                 const totalOrders = await ordersCollection.countDocuments(query);

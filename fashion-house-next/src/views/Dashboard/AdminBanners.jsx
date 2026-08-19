@@ -76,7 +76,7 @@ export default function AdminBanners({ children }) {
         };
         return [...(old || []), newBanner];
       });
-      queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
+      queryClient.invalidateQueries();
       setShowForm(false);
       resetCreate();
       setCreateImage("");
@@ -96,7 +96,7 @@ export default function AdminBanners({ children }) {
           b._id === variables.id ? { ...b, ...variables.payload } : b
         );
       });
-      queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
+      queryClient.invalidateQueries();
       setEditingId(null);
       resetUpdate();
       setEditImage("");
@@ -128,7 +128,7 @@ export default function AdminBanners({ children }) {
       setDeletingId(null);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-banners"] });
+      queryClient.invalidateQueries();
     },
   });
 
