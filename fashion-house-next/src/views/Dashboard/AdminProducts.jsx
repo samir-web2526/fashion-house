@@ -9,9 +9,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { Plus, Eye, X, Package, Camera, ImagePlus, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Eye, Trash2, X, Package, Camera, ImagePlus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 
-import { getProducts, createProduct } from "@/services/product.api";
+import { getProducts, createProduct, deleteProduct } from "@/services/product.api";
 import { formatBDT } from "@/utils/currency";
 import { getCategories } from "@/services/category.api";
 import { Button } from "@/components/ui/Button";
@@ -65,6 +65,7 @@ export default function AdminProducts({ children }) {
   usePageTitle("Admin Products");
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [imageFiles, setImageFiles] = useState([]);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
@@ -174,6 +175,36 @@ export default function AdminProducts({ children }) {
       } else {
         toast.error(data?.message || data?.error || "Failed to create product");
       }
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteProduct,
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-products"] });
+      const previous = queryClient.getQueryData(["admin-products"]);
+      queryClient.setQueryData(["admin-products"], (old) => {
+        if (!old || !old.products) return old;
+        return {
+          ...old,
+          products: old.products.filter((p) => p._id !== id),
+          totalProducts: Math.max(0, (old.totalProducts || 0) - 1),
+        };
+      });
+      return { previous };
+    },
+    onError: (err, id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["admin-products"], context.previous);
+      }
+      toast.error(err?.response?.data?.message || "Failed to delete product");
+    },
+    onSuccess: () => {
+      toast.success("Product deleted successfully");
+      setDeletingId(null);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
     },
   });
 
@@ -631,11 +662,43 @@ export default function AdminProducts({ children }) {
                       )}
                     </td>
                     <td className="px-5 py-3">
-                      <Button asChild variant="ghost" size="sm">
-                        <Link href={`/dashboard/products/${product._id}`}>
-                          <Eye className="size-4" />
-                        </Link>
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href={`/dashboard/products/${product._id}`}>
+                            <Eye className="size-4" />
+                          </Link>
+                        </Button>
+                        {deletingId === product._id ? (
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              disabled={deleteMutation.isPending}
+                              onClick={() => deleteMutation.mutate(product._id)}
+                              className="h-7 text-xs px-2"
+                            >
+                              {deleteMutation.isPending ? "..." : "Delete"}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeletingId(null)}
+                              className="h-7 text-xs px-2"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => setDeletingId(product._id)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

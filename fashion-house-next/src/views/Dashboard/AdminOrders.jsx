@@ -6,8 +6,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import { Package, Eye, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
-import { getAllOrders, updateOrderStatus } from "@/services/order.api";
+import { Package, Eye, Trash2, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { getAllOrders, updateOrderStatus, deleteOrder } from "@/services/order.api";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Helmet } from "react-helmet-async";
@@ -35,6 +35,7 @@ export default function AdminOrders({ children }) {
   const { siteName } = useSettings();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("all");
+  const [deletingId, setDeletingId] = useState(null);
   const [page, setPage] = useState(1);
   const limit = 10;
 
@@ -71,6 +72,39 @@ export default function AdminOrders({ children }) {
     },
     onSuccess: () => {
       toast.success("Order status updated");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteOrder,
+    onMutate: async (deletedId) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-orders"] });
+      const previousOrders = queryClient.getQueryData(["admin-orders"]);
+      queryClient.setQueryData(["admin-orders"], (old) => {
+        if (!old) return old;
+        if (Array.isArray(old)) {
+          return old.filter((o) => o._id !== deletedId);
+        }
+        return {
+          ...old,
+          orders: (old.orders || []).filter((o) => o._id !== deletedId),
+          totalOrders: Math.max(0, (old.totalOrders || 0) - 1),
+        };
+      });
+      return { previousOrders };
+    },
+    onError: (err, deletedId, context) => {
+      if (context?.previousOrders) {
+        queryClient.setQueryData(["admin-orders"], context.previousOrders);
+      }
+      toast.error(err?.response?.data?.message || "Failed to delete order");
+    },
+    onSuccess: () => {
+      toast.success("Order deleted successfully");
+      setDeletingId(null);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
@@ -224,11 +258,43 @@ export default function AdminOrders({ children }) {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <Button asChild variant="ghost" size="sm">
-                      <Link href={`/dashboard/orders/${order._id}`}>
-                        <Eye className="size-4" />
-                      </Link>
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button asChild variant="ghost" size="sm">
+                        <Link href={`/dashboard/orders/${order._id}`}>
+                          <Eye className="size-4" />
+                        </Link>
+                      </Button>
+                      {deletingId === order._id ? (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={deleteMutation.isPending}
+                            onClick={() => deleteMutation.mutate(order._id)}
+                            className="h-7 text-xs px-2"
+                          >
+                            {deleteMutation.isPending ? "..." : "Delete"}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeletingId(null)}
+                            className="h-7 text-xs px-2"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => setDeletingId(order._id)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </motion.tr>
               ))}

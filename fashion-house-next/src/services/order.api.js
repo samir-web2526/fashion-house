@@ -50,3 +50,8 @@ export const sendOrderInvoice = async (orderId) => {
   const { data } = await axiosPublic.post(`/orders/${orderId}/invoice`);
   return data;
 };
+
+export const deleteOrder = async (id) => {
+  const { data } = await axiosSecure.delete(`/orders/${id}`);
+  return data;
+};

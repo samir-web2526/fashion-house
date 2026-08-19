@@ -2,6 +2,7 @@ const { ObjectId } = require("mongodb");
 const { getDB } = require("../config/db");
 const { sendMail } = require("../config/mail");
 const { withCache, clearCache } = require("../utils/cache");
+const { buildIdQuery } = require("../utils/buildIdQuery");
 
 const createOrder = async (req, res) => {
     try {
@@ -909,6 +910,26 @@ const getDashboardStats = async (req, res) => {
     }
 };
 
+const deleteOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const db = getDB();
+        const ordersCollection = db.collection("orders");
+
+        const result = await ordersCollection.deleteOne(buildIdQuery(id));
+
+        if (result.deletedCount === 0) {
+            return res.status(404).send({ message: "Order not found" });
+        }
+
+        clearCache();
+        res.send({ message: "Order deleted successfully" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
 module.exports = {
     createOrder,
     createGuestOrder,
@@ -920,4 +941,5 @@ module.exports = {
     cancelOrder,
     sendInvoice,
     getDashboardStats,
+    deleteOrder,
 };

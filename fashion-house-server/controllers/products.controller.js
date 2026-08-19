@@ -1,6 +1,7 @@
 const { ObjectId } = require("mongodb");
 const { getDB } = require("../config/db");
 const { withCache, clearCache } = require("../utils/cache");
+const { buildIdQuery } = require("../utils/buildIdQuery");
 
 const createProduct = async (req, res) => {
     try {
@@ -212,23 +213,12 @@ const getAllProducts = async (req, res) => {
 };
 
 const getSingleProduct = async (req, res) => {
-
     try {
         const { id } = req.params;
-
-           if (!ObjectId.isValid(id)) {
-            return res.status(400).send({
-                message: "Invalid product id"
-            });
-        }
-
         const db = getDB();
-
         const productsCollection = db.collection("products");
 
-        const query = { _id: new ObjectId(id) };
-
-        const result = await productsCollection.findOne(query);
+        const result = await productsCollection.findOne(buildIdQuery(id));
 
         if (!result) {
             return res.status(404).send({ message: "Product not found" });
@@ -244,9 +234,7 @@ const getSingleProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-
         const db = getDB();
-
         const productsCollection = db.collection("products");
 
         const updatedFields = {
@@ -260,63 +248,41 @@ const updateProduct = async (req, res) => {
         };
 
         const result = await productsCollection.updateOne(
-            {
-                _id: new ObjectId(id)
-            },
-            {
-                $set: updatedFields
-            }
+            buildIdQuery(id),
+            { $set: updatedFields }
         );
 
         if (result.matchedCount === 0) {
-            return res.status(404).send({
-                message: "Product not found"
-            });
+            return res.status(404).send({ message: "Product not found" });
         }
 
         clearCache();
-
-        res.send({
-            message: "Product updated successfully"
-        });
+        res.send({ message: "Product updated successfully" });
 
     } catch (error) {
         console.log(error);
-        res.status(500).send({
-            message: "Internal Server Error"
-        });
+        res.status(500).send({ message: "Internal Server Error" });
     }
 };
 
 const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
-
         const db = getDB();
         const productsCollection = db.collection("products");
 
-        const result = await productsCollection.deleteOne({
-            _id: new ObjectId(id)
-        });
+        const result = await productsCollection.deleteOne(buildIdQuery(id));
 
         if (result.deletedCount === 0) {
-            return res.status(404).send({
-                message: "Product not found"
-            });
+            return res.status(404).send({ message: "Product not found" });
         }
 
         clearCache();
-
-        res.send({
-            message: "Product deleted successfully"
-        });
+        res.send({ message: "Product deleted successfully" });
 
     } catch (error) {
         console.log(error);
-
-        res.status(500).send({
-            message: "Internal Server Error"
-        });
+        res.status(500).send({ message: "Internal Server Error" });
     }
 };
 

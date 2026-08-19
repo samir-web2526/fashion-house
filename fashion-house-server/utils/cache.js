@@ -98,13 +98,6 @@ const clearCache = (key) => {
     } else {
         cache.clear();
     }
-
-    // Automatically re-warm cache in the background after invalidation
-    const { getDB } = require("../config/db");
-    const db = getDB();
-    if (db) {
-        warmUpCache(db).catch(err => console.error("Background warmup failed:", err));
-    }
 };
 
 module.exports = {

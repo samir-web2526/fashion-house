@@ -1,6 +1,7 @@
 const { getDB } = require("../config/db");
 const { ObjectId } = require("mongodb");
 const { withCache, clearCache } = require("../utils/cache");
+const { buildIdQuery } = require("../utils/buildIdQuery");
 
 const createCategory = async (req, res) => {
     try {
@@ -124,54 +125,31 @@ const getAllCategories = async (req, res) => {
 const getSingleCategory = async (req, res) => {
     try {
         const { id } = req.params;
-
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).send({
-                message: "Invalid category id"
-            });
-        }
-
         const db = getDB();
         const categoriesCollection = db.collection("categories");
 
-        const category = await categoriesCollection.findOne({
-            _id: new ObjectId(id)
-        });
+        const category = await categoriesCollection.findOne(buildIdQuery(id));
 
         if (!category) {
-            return res.status(404).send({
-                message: "Category not found"
-            });
+            return res.status(404).send({ message: "Category not found" });
         }
 
         res.send(category);
 
     } catch (error) {
         console.log(error);
-
-        res.status(500).send({
-            message: "Internal Server Error"
-        });
+        res.status(500).send({ message: "Internal Server Error" });
     }
 };
 
 const updateCategory = async (req, res) => {
     try {
         const { id } = req.params;
-
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).send({
-                message: "Invalid category id"
-            });
-        }
-
         const db = getDB();
         const categoriesCollection = db.collection("categories");
 
         const result = await categoriesCollection.updateOne(
-            {
-                _id: new ObjectId(id)
-            },
+            buildIdQuery(id),
             {
                 $set: {
                     ...req.body,
@@ -181,61 +159,36 @@ const updateCategory = async (req, res) => {
         );
 
         if (result.matchedCount === 0) {
-            return res.status(404).send({
-                message: "Category not found"
-            });
+            return res.status(404).send({ message: "Category not found" });
         }
 
         clearCache();
-
-        res.send({
-            message: "Category updated successfully"
-        });
+        res.send({ message: "Category updated successfully" });
 
     } catch (error) {
         console.log(error);
-
-        res.status(500).send({
-            message: "Internal Server Error"
-        });
+        res.status(500).send({ message: "Internal Server Error" });
     }
 };
 
 const deleteCategory = async (req, res) => {
     try {
         const { id } = req.params;
-
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).send({
-                message: "Invalid category id"
-            });
-        }
-
         const db = getDB();
         const categoriesCollection = db.collection("categories");
 
-        const result = await categoriesCollection.deleteOne({
-            _id: new ObjectId(id)
-        });
+        const result = await categoriesCollection.deleteOne(buildIdQuery(id));
 
         if (result.deletedCount === 0) {
-            return res.status(404).send({
-                message: "Category not found"
-            });
+            return res.status(404).send({ message: "Category not found" });
         }
 
         clearCache();
-
-        res.send({
-            message: "Category deleted successfully"
-        });
+        res.send({ message: "Category deleted successfully" });
 
     } catch (error) {
         console.log(error);
-
-        res.status(500).send({
-            message: "Internal Server Error"
-        });
+        res.status(500).send({ message: "Internal Server Error" });
     }
 };
 

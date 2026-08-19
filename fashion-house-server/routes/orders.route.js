@@ -11,6 +11,7 @@ const {
     cancelOrder,
     sendInvoice,
     getDashboardStats,
+    deleteOrder,
 } = require("../controllers/orders.controller");
 
 const validate = require("../middlewares/validate");
@@ -86,6 +87,13 @@ router.patch(
     "/:id/cancel",
     verifyToken,
     cancelOrder
+);
+
+router.delete(
+    "/:id",
+    verifyToken,
+    verifyAdmin,
+    deleteOrder
 );
 
 module.exports = router;

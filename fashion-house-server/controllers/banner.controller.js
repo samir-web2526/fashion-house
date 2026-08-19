@@ -1,6 +1,7 @@
 const { ObjectId } = require("mongodb");
 const { getDB } = require("../config/db");
 const { withCache, clearCache } = require("../utils/cache");
+const { buildIdQuery } = require("../utils/buildIdQuery");
 
 const createBanner = async (req, res) => {
     try {
@@ -49,12 +50,9 @@ const getAllBanners = async (req, res) => {
 const getSingleBanner = async (req, res) => {
     try {
         const { id } = req.params;
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).send({ message: "Invalid banner id" });
-        }
         const db = getDB();
         const bannersCollection = db.collection("banners");
-        const banner = await bannersCollection.findOne({ _id: new ObjectId(id) });
+        const banner = await bannersCollection.findOne(buildIdQuery(id));
         if (!banner) {
             return res.status(404).send({ message: "Banner not found" });
         }
@@ -68,13 +66,10 @@ const getSingleBanner = async (req, res) => {
 const updateBanner = async (req, res) => {
     try {
         const { id } = req.params;
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).send({ message: "Invalid banner id" });
-        }
         const db = getDB();
         const bannersCollection = db.collection("banners");
         const result = await bannersCollection.updateOne(
-            { _id: new ObjectId(id) },
+            buildIdQuery(id),
             { $set: { ...req.body, updatedAt: new Date() } }
         );
         if (result.matchedCount === 0) {
@@ -91,12 +86,9 @@ const updateBanner = async (req, res) => {
 const deleteBanner = async (req, res) => {
     try {
         const { id } = req.params;
-        if (!ObjectId.isValid(id)) {
-            return res.status(400).send({ message: "Invalid banner id" });
-        }
         const db = getDB();
         const bannersCollection = db.collection("banners");
-        const result = await bannersCollection.deleteOne({ _id: new ObjectId(id) });
+        const result = await bannersCollection.deleteOne(buildIdQuery(id));
         if (result.deletedCount === 0) {
             return res.status(404).send({ message: "Banner not found" });
         }
