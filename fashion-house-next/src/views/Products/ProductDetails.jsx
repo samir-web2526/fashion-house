@@ -433,39 +433,11 @@ export default function ProductDetails({ children }) {
           </div>
         </div>
 
-        {/* Description / Review Tabs */}
+        {/* Description Section */}
         <div className="mt-10 border-t border-border pt-6">
-          <div className="flex gap-6 border-b border-border">
-            <button
-              onClick={() => setActiveTab("description")}
-              className={`border-b-2 pb-3 text-sm font-medium transition-colors ${activeTab === "description"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-            >
-              Description
-            </button>
-            <button
-              onClick={() => setActiveTab("review")}
-              className={`border-b-2 pb-3 text-sm font-medium transition-colors ${activeTab === "review"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-            >
-              Review
-            </button>
-          </div>
-
-          <div className="py-6">
-            {activeTab === "description" ? (
-              <div className="prose prose-sm max-w-none text-muted-foreground">
-                <p className="whitespace-pre-line">{product.description}</p>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No reviews yet. Be the first to review this product.
-              </p>
-            )}
+          <h3 className="text-base font-semibold text-foreground mb-4">Description</h3>
+          <div className="prose prose-sm max-w-none text-muted-foreground">
+            <p className="whitespace-pre-line">{product.description}</p>
           </div>
         </div>
       </div>

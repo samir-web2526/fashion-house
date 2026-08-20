@@ -34,7 +34,6 @@ const SORT_OPTIONS = [
   { label: "Newest", value: "newest" },
   { label: "Price: Low to High", value: "asc" },
   { label: "Price: High to Low", value: "desc" },
-  { label: "Rating", value: "rating" },
 ];
 
 import usePageTitle from "@/hooks/usePageTitle";
