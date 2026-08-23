@@ -67,12 +67,17 @@ const warmUpCache = async (db) => {
                     description: 0, 
                     dimensions: 0, 
                     reviews: 0, 
-                    images: { $slice: 1 }, 
+                    images: 0, 
                     sizeMeasurements: 0, 
                     warrantyInformation: 0, 
                     shippingInformation: 0, 
                     returnPolicy: 0, 
-                    sizes: 0 
+                    sizes: 0,
+                    tags: 0,
+                    sku: 0,
+                    weight: 0,
+                    availabilityStatus: 0,
+                    minimumOrderQuantity: 0
                 })
                 .sort({ "meta.createdAt": -1 })
                 .toArray();

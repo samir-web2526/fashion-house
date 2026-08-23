@@ -58,6 +58,8 @@ export default function ProductDetails({ children }) {
   const isAdmin = user?.role === "admin";
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [activeDisplayImage, setActiveDisplayImage] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
 
@@ -69,7 +71,20 @@ export default function ProductDetails({ children }) {
 
   usePageTitle(product?.title || "Product Details");
 
-
+  // Sync color & display image when product loads
+  const [prevProductId, setPrevProductId] = useState(null);
+  if (product && product._id !== prevProductId) {
+    setPrevProductId(product._id);
+    if (product.colors?.length > 0) {
+      setSelectedColor(product.colors[0]);
+      if (product.colors[0].image) {
+        setActiveDisplayImage(product.colors[0].image);
+      }
+    } else {
+      setSelectedColor(null);
+      setActiveDisplayImage(null);
+    }
+  }
 
   const allImages = useMemo(() => {
     if (!product) return [];
@@ -93,17 +108,18 @@ export default function ProductDetails({ children }) {
       toast.error("Please select a size");
       return;
     }
-    await addToCart(product, quantity, selectedSize || "");
+    if (product?.colors?.length > 0 && !selectedColor) {
+      toast.error("Please select a color");
+      return;
+    }
+    await addToCart(
+      product,
+      quantity,
+      selectedSize || "",
+      selectedColor?.name || "",
+      selectedColor?.image || ""
+    );
   };
-
-  // const handleBuyNow = async () => {
-  //   if (product?.sizes?.length > 0 && !selectedSize) {
-  //     toast.error("Please select a size");
-  //     return;
-  //   }
-  //   await addToCart(product, quantity, selectedSize || "");
-  //   router.push("/checkout");
-  // };
 
   if (isLoading) return <ProductSkeleton />;
 
@@ -117,6 +133,8 @@ export default function ProductDetails({ children }) {
       </div>
     );
   }
+
+  const mainDisplayImage = activeDisplayImage || allImages[selectedImage] || product.thumbnail;
 
   return (
     <>
@@ -145,7 +163,7 @@ export default function ProductDetails({ children }) {
           <div className="flex flex-col gap-3 lg:w-[35%]">
             <div className="relative overflow-hidden border border-border bg-muted">
               <img
-                src={allImages[selectedImage]}
+                src={mainDisplayImage}
                 alt={product.title}
                 className="aspect-4/5 w-full object-cover"
               />
@@ -163,8 +181,11 @@ export default function ProductDetails({ children }) {
                 {allImages.map((img, i) => (
                   <button
                     key={i}
-                    onClick={() => setSelectedImage(i)}
-                    className={`size-16 shrink-0 overflow-hidden rounded border transition-colors sm:size-20 ${i === selectedImage
+                    onClick={() => {
+                      setSelectedImage(i);
+                      setActiveDisplayImage(img);
+                    }}
+                    className={`size-16 shrink-0 overflow-hidden rounded border transition-colors sm:size-20 ${img === mainDisplayImage
                       ? "border-foreground"
                       : "border-border hover:border-muted-foreground/50"
                       }`}
@@ -204,25 +225,50 @@ export default function ProductDetails({ children }) {
               )}
             </div>
 
-            {/* Color Selection Mock */}
-            <div className="space-y-2 border-b border-border pb-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-foreground">Color :</span>
-                <ChevronDown className="size-4 text-foreground" />
+            {/* Color Family Selection */}
+            {product?.colors?.length > 0 && (
+              <div className="space-y-2 border-b border-border pb-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-foreground">
+                    Color Family : <span className="font-normal text-muted-foreground">{selectedColor?.name || "Select a color"}</span>
+                  </span>
+                  <ChevronDown className="size-4 text-foreground" />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {product.colors.map((colorObj, index) => {
+                    const isSelected = selectedColor?.name === colorObj.name;
+                    return (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => {
+                          setSelectedColor(colorObj);
+                          if (colorObj.image) {
+                            setActiveDisplayImage(colorObj.image);
+                          }
+                        }}
+                        className={`group relative flex items-center gap-2 rounded-lg border-2 p-1.5 transition-all ${
+                          isSelected
+                            ? "border-foreground bg-muted/40 ring-1 ring-foreground"
+                            : "border-border hover:border-foreground/50 bg-background"
+                        }`}
+                      >
+                        <div className="size-10 overflow-hidden rounded border border-border bg-muted shrink-0">
+                          <img
+                            src={colorObj.image || product.thumbnail}
+                            alt={colorObj.name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <span className="pr-2 text-xs font-semibold text-foreground">
+                          {colorObj.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="flex gap-2">
-                {allImages.slice(0, 2).map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedImage(i)}
-                    className={`size-12 overflow-hidden border-2 transition-colors ${i === selectedImage ? "border-foreground" : "border-border"
-                      }`}
-                  >
-                    <img src={img} alt="Color Option" className="h-full w-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Size Selection */}
             {product?.sizes?.length > 0 && (

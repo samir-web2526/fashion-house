@@ -80,6 +80,11 @@ export default function AdminProducts({ children }) {
   const [discountFilter, setDiscountFilter] = useState("");
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [sizeMeasurements, setSizeMeasurements] = useState({});
+  const [colorVariants, setColorVariants] = useState([]);
+  const [colorNameInput, setColorNameInput] = useState("");
+  const [colorFile, setColorFile] = useState(null);
+  const [colorPreview, setColorPreview] = useState("");
+  const colorInputRef = useRef(null);
   const [page, setPage] = useState(1);
   const limit = 10;
 
@@ -219,7 +224,34 @@ export default function AdminProducts({ children }) {
     setImagePreviews([]);
     setSelectedSizes([]);
     setSizeMeasurements({});
+    setColorVariants([]);
+    setColorNameInput("");
+    setColorFile(null);
+    setColorPreview("");
     reset();
+  };
+
+  const handleAddColorVariant = async () => {
+    if (!colorNameInput.trim()) {
+      toast.error("Please enter a color name");
+      return;
+    }
+    if (!colorFile && !colorPreview) {
+      toast.error("Please upload an image for this color");
+      return;
+    }
+    let imgStr = colorPreview;
+    if (colorFile) {
+      imgStr = await toBase64(colorFile);
+    }
+    setColorVariants((prev) => [...prev, { name: colorNameInput.trim(), image: imgStr }]);
+    setColorNameInput("");
+    setColorFile(null);
+    setColorPreview("");
+  };
+
+  const handleRemoveColorVariant = (index) => {
+    setColorVariants((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (formData) => {
@@ -243,21 +275,29 @@ export default function AdminProducts({ children }) {
       images = await Promise.all(imageFiles.map((f) => toBase64(f)));
     }
 
-    if (!thumbnail && images.length > 0) {
+    const processedColors = await Promise.all(
+      colorVariants.map(async (c) => ({
+        name: c.name,
+        image: c.file ? await toBase64(c.file) : c.image,
+      }))
+    );
+
+    if (!thumbnail && processedColors.length > 0) {
+      thumbnail = processedColors[0].image;
+    } else if (!thumbnail && images.length > 0) {
       thumbnail = images[0];
     }
-
-    const measurementsArray = selectedSizes.map(size => ({
-      size,
-      long: sizeMeasurements[size]?.long || "",
-      body: sizeMeasurements[size]?.body || ""
-    }));
 
     const payload = {
       ...formData,
       tags: formData.tags ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
       sizes: selectedSizes,
-      sizeMeasurements: measurementsArray,
+      sizeMeasurements: (selectedSizes || []).map((s) => ({
+        size: s,
+        long: sizeMeasurements[s]?.long || "",
+        body: sizeMeasurements[s]?.body || "",
+      })),
+      colors: processedColors,
       thumbnail,
       images,
     };
@@ -430,6 +470,71 @@ export default function AdminProducts({ children }) {
                               onChange={(e) => setSizeMeasurements(prev => ({ ...prev, [size]: { ...prev[size], body: e.target.value } }))}
                               className="flex-1"
                             />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="sm:col-span-2 space-y-3 rounded-lg border border-border p-4 bg-muted/20">
+                    <label className="block text-sm font-medium text-foreground">Color Variants (Color Family with Image)</label>
+                    <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                      <Input
+                        placeholder="Color name (e.g. Orange, Navy Blue)"
+                        value={colorNameInput}
+                        onChange={(e) => setColorNameInput(e.target.value)}
+                        className="flex-1"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={colorInputRef}
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setColorFile(file);
+                            setColorPreview(URL.createObjectURL(file));
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => colorInputRef.current?.click()}
+                        className="shrink-0 text-xs"
+                      >
+                        <Camera className="size-3.5 mr-1" />
+                        {colorPreview ? "Change Image" : "Upload Color Image"}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleAddColorVariant}
+                        className="shrink-0 text-xs"
+                      >
+                        Add Variant
+                      </Button>
+                    </div>
+                    {colorPreview && (
+                      <div className="flex items-center gap-2 pt-1">
+                        <img src={colorPreview} alt="Color preview" className="size-10 rounded border object-cover" />
+                        <span className="text-xs text-muted-foreground">Image selected for {colorNameInput || "new color"}</span>
+                      </div>
+                    )}
+
+                    {colorVariants.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-3 pt-2 border-t border-border">
+                        {colorVariants.map((c, index) => (
+                          <div key={index} className="flex items-center gap-2 rounded-lg border border-border bg-background p-1.5 pr-3 shadow-sm">
+                            <img src={c.image} alt={c.name} className="size-9 rounded object-cover border" />
+                            <span className="text-xs font-semibold text-foreground">{c.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveColorVariant(index)}
+                              className="ml-1 text-muted-foreground hover:text-destructive"
+                            >
+                              <X className="size-3.5" />
+                            </button>
                           </div>
                         ))}
                       </div>

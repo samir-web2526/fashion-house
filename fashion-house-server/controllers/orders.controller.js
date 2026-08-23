@@ -38,10 +38,12 @@ const createOrder = async (req, res) => {
                 $project: {
                     productId: "$product._id",
                     title: "$product.title",
-                    thumbnail: "$product.thumbnail",
+                    thumbnail: { $ifNull: ["$items.colorImage", "$product.thumbnail"] },
                     price: "$product.price",
                     quantity: "$items.quantity",
                     size: "$items.size",
+                    color: "$items.color",
+                    colorImage: "$items.colorImage",
                     subtotal: {
                         $multiply: [
                             "$items.quantity",
@@ -177,10 +179,12 @@ const createGuestOrder = async (req, res) => {
             cart.push({
                 productId: product._id,
                 title: product.title,
-                thumbnail: product.thumbnail,
+                thumbnail: item.colorImage || item.thumbnail || product.thumbnail,
                 price: product.price,
                 quantity: item.quantity,
                 size: item.size || "",
+                color: item.color || "",
+                colorImage: item.colorImage || "",
                 subtotal: item.quantity * product.price,
             });
         }
@@ -659,7 +663,7 @@ const sendInvoice = async (req, res) => {
                 (item, idx) => `
                 <tr style="background:${idx % 2 === 0 ? "#fff" : "#fafafa"};">
                     <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;font-size:13px;color:#333;">
-                        <span style="font-weight:600;">${item.title}</span>${item.size ? `<br><span style="font-size:11px;color:#888;">Size: ${item.size}</span>` : ""}
+                        <span style="font-weight:600;">${item.title}</span>${item.color ? `<br><span style="font-size:11px;color:#888;">Color: ${item.color}</span>` : ""}${item.size ? `<br><span style="font-size:11px;color:#888;">Size: ${item.size}</span>` : ""}
                     </td>
                     <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:center;font-size:13px;color:#555;">${item.quantity}</td>
                     <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;color:#555;">৳${Number(item.price).toFixed(2)}</td>

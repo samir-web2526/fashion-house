@@ -20,6 +20,8 @@ export default function OrderModal({ product, open, onClose }) {
   const router = useRouter();
   const { addToCart } = useAddToCart();
   const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(() => product?.colors?.[0] || null);
+  const [activeDisplayImage, setActiveDisplayImage] = useState(() => product?.colors?.[0]?.image || null);
   const [quantity, setQuantity] = useState(1);
 
   if (!open || !product) return null;
@@ -41,14 +43,26 @@ export default function OrderModal({ product, open, onClose }) {
   const isFashion = FASHION_CATEGORIES.some(fc => productCategory.includes(fc));
 
   const handleAddToCart = async () => {
-    if (isFashion && !selectedSize) {
+    if (isFashion && product.sizes?.length > 0 && !selectedSize) {
       toast.error("Please select a size");
       return;
     }
-    await addToCart(product, quantity, selectedSize || "");
+    if (product.colors?.length > 0 && !selectedColor) {
+      toast.error("Please select a color");
+      return;
+    }
+    await addToCart(
+      product,
+      quantity,
+      selectedSize || "",
+      selectedColor?.name || "",
+      selectedColor?.image || ""
+    );
     onClose();
     router.push("/cart");
   };
+
+  const previewImage = activeDisplayImage || product.thumbnail || product.images?.[0] || null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
@@ -70,7 +84,7 @@ export default function OrderModal({ product, open, onClose }) {
           <div className="shrink-0">
             <div className="size-40 overflow-hidden rounded-xl border border-border bg-muted sm:size-48">
               <img
-                src={product.thumbnail || product.images?.[0] || null}
+                src={previewImage}
                 alt={product.title}
                 className="h-full w-full object-cover"
               />
@@ -93,6 +107,47 @@ export default function OrderModal({ product, open, onClose }) {
                 )}
               </div>
             </div>
+
+            {product.colors?.length > 0 && (
+              <div>
+                <p className="mb-2 text-sm font-medium text-foreground">
+                  Choose Color : <span className="font-normal text-muted-foreground">{selectedColor?.name}</span>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {product.colors.map((colorObj, index) => {
+                    const isSelected = selectedColor?.name === colorObj.name;
+                    return (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => {
+                          setSelectedColor(colorObj);
+                          if (colorObj.image) {
+                            setActiveDisplayImage(colorObj.image);
+                          }
+                        }}
+                        className={`flex items-center gap-2 rounded-lg border-2 p-1.5 transition-all ${
+                          isSelected
+                            ? "border-foreground bg-muted/40 ring-1 ring-foreground"
+                            : "border-border hover:border-foreground/50 bg-background"
+                        }`}
+                      >
+                        <div className="size-8 overflow-hidden rounded border border-border bg-muted shrink-0">
+                          <img
+                            src={colorObj.image || product.thumbnail}
+                            alt={colorObj.name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <span className="pr-1.5 text-xs font-semibold text-foreground">
+                          {colorObj.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {isFashion && product.sizes?.length > 0 && (
               <div>

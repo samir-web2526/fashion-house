@@ -315,7 +315,7 @@ export default function OrderDetails({ children }) {
                       >
                         <div className="relative shrink-0">
                           <img
-                            src={item.thumbnail}
+                            src={item.colorImage || item.thumbnail}
                             alt={item.title}
                             className="size-16 rounded-xl object-cover ring-1 ring-border transition-transform group-hover:scale-105 sm:size-20"
                           />
@@ -330,10 +330,19 @@ export default function OrderDetails({ children }) {
                           >
                             {item.title}
                           </Link>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {item.quantity} x {formatBDT(item.price)}
-                            {item.size ? ` (Size: ${item.size})` : ""}
-                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                            <span>{item.quantity} x {formatBDT(item.price)}</span>
+                            {item.color && (
+                              <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-foreground">
+                                Color: {item.color}
+                              </span>
+                            )}
+                            {item.size && (
+                              <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-foreground">
+                                Size: {item.size}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <span className="shrink-0 text-sm font-bold text-foreground">
                           {formatBDT(item.subtotal)}

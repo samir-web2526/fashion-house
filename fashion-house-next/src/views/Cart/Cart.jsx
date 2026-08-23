@@ -65,11 +65,11 @@ export default function Cart({ children }) {
   const items = cart?.items ?? [];
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, quantity, size }) => {
-      updateLocalCartItem(id, quantity, size);
+    mutationFn: ({ id, quantity, size, color }) => {
+      updateLocalCartItem(id, quantity, size, color);
       return Promise.resolve();
     },
-    onMutate: async ({ id, quantity, size }) => {
+    onMutate: async ({ id, quantity, size, color }) => {
       await queryClient.cancelQueries({ queryKey: ["localCart"] });
       const previousCart = queryClient.getQueryData(["localCart"]);
       queryClient.setQueryData(["localCart"], (old) => {
@@ -77,7 +77,9 @@ export default function Cart({ children }) {
         return {
           ...old,
           items: old.items.map((item) =>
-            item.productId === id && (item.size || "") === (size || "")
+            item.productId === id &&
+            (item.size || "") === (size || "") &&
+            (item.color || "") === (color || "")
               ? { ...item, quantity }
               : item
           ),
@@ -97,11 +99,11 @@ export default function Cart({ children }) {
   });
 
   const removeMutation = useMutation({
-    mutationFn: ({ id, size }) => {
-      removeFromLocalCart(id, size);
+    mutationFn: ({ id, size, color }) => {
+      removeFromLocalCart(id, size, color);
       return Promise.resolve();
     },
-    onMutate: async ({ id, size }) => {
+    onMutate: async ({ id, size, color }) => {
       await queryClient.cancelQueries({ queryKey: ["localCart"] });
       const previousCart = queryClient.getQueryData(["localCart"]);
       queryClient.setQueryData(["localCart"], (old) => {
@@ -109,7 +111,12 @@ export default function Cart({ children }) {
         return {
           ...old,
           items: old.items.filter(
-            (item) => !(item.productId === id && (item.size || "") === (size || ""))
+            (item) =>
+              !(
+                item.productId === id &&
+                (item.size || "") === (size || "") &&
+                (item.color || "") === (color || "")
+              )
           ),
         };
       });
@@ -207,9 +214,9 @@ export default function Cart({ children }) {
                   href={`/product/${item.productId}`}
                   className="size-20 shrink-0 overflow-hidden rounded-lg bg-muted sm:size-24"
                 >
-                  {item.thumbnail ? (
+                  {item.colorImage || item.thumbnail ? (
                     <img
-                      src={item.thumbnail}
+                      src={item.colorImage || item.thumbnail}
                       alt={item.title || "Product"}
                       className="h-full w-full object-cover"
                     />
@@ -228,10 +235,19 @@ export default function Cart({ children }) {
                     >
                       {item.title || "Product"}
                     </Link>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {item.category || ""}
-                      {item.size && <span className="ml-2 font-medium text-foreground">Size: {item.size}</span>}
-                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                      <span>{item.category || ""}</span>
+                      {item.color && (
+                        <span className="rounded bg-muted px-2 py-0.5 font-medium text-foreground">
+                          Color: {item.color}
+                        </span>
+                      )}
+                      {item.size && (
+                        <span className="rounded bg-muted px-2 py-0.5 font-medium text-foreground">
+                          Size: {item.size}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {!ok && (
@@ -251,6 +267,7 @@ export default function Cart({ children }) {
                             id: item.productId,
                             quantity: item.quantity - 1,
                             size: item.size || "",
+                            color: item.color || "",
                           })
                         }
                       >
@@ -267,6 +284,7 @@ export default function Cart({ children }) {
                             id: item.productId,
                             quantity: item.quantity + 1,
                             size: item.size || "",
+                            color: item.color || "",
                           })
                         }
                       >
@@ -281,7 +299,7 @@ export default function Cart({ children }) {
                       <button
                         className="flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                         disabled={removeMutation.isPending}
-                        onClick={() => removeMutation.mutate({ id: item.productId, size: item.size || "" })}
+                        onClick={() => removeMutation.mutate({ id: item.productId, size: item.size || "", color: item.color || "" })}
                       >
                         <Trash2 className="size-4" />
                       </button>

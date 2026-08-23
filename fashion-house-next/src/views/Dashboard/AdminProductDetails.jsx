@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Camera, X } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
 import { getProductById, updateProduct, deleteProduct } from "@/services/product.api";
@@ -63,6 +63,11 @@ export default function AdminProductDetails({ children }) {
   const imagesInputRef = useRef(null);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [sizeMeasurements, setSizeMeasurements] = useState({});
+  const [colorVariants, setColorVariants] = useState([]);
+  const [colorNameInput, setColorNameInput] = useState("");
+  const [colorFile, setColorFile] = useState(null);
+  const [colorPreview, setColorPreview] = useState("");
+  const colorInputRef = useRef(null);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["admin-product", id],
@@ -105,11 +110,12 @@ export default function AdminProductDetails({ children }) {
       : undefined,
   });
 
-  // Sync sizes, measurements, and form when product changes (render-time pattern)
+  // Sync sizes, measurements, colors, and form when product changes (render-time pattern)
   const [prevProductId, setPrevProductId] = useState(null);
   if (product && product._id !== prevProductId) {
     setPrevProductId(product._id);
     setSelectedSizes(product.sizes ?? []);
+    setColorVariants(product.colors ?? []);
     if (product.sizeMeasurements) {
       const initialMeasurements = {};
       product.sizeMeasurements.forEach(m => {
@@ -204,6 +210,29 @@ export default function AdminProductDetails({ children }) {
 
   const toBase64 = (file) => compressImage(file);
 
+  const handleAddColorVariant = async () => {
+    if (!colorNameInput.trim()) {
+      toast.error("Please enter a color name");
+      return;
+    }
+    if (!colorFile && !colorPreview) {
+      toast.error("Please upload an image for this color");
+      return;
+    }
+    let imgStr = colorPreview;
+    if (colorFile) {
+      imgStr = await toBase64(colorFile);
+    }
+    setColorVariants((prev) => [...prev, { name: colorNameInput.trim(), image: imgStr }]);
+    setColorNameInput("");
+    setColorFile(null);
+    setColorPreview("");
+  };
+
+  const handleRemoveColorVariant = (index) => {
+    setColorVariants((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const onSubmit = async (formData) => {
     if (selectedSizes.length > 0) {
       for (const size of selectedSizes) {
@@ -217,12 +246,17 @@ export default function AdminProductDetails({ children }) {
     let thumbnail = product.thumbnail ?? "";
     let images = product.images ?? [];
 
-    if (thumbnailFile) {
-      thumbnail = await toBase64(thumbnailFile);
-    }
+    const processedColors = await Promise.all(
+      colorVariants.map(async (c) => ({
+        name: c.name,
+        image: c.file ? await toBase64(c.file) : c.image,
+      }))
+    );
 
-    if (imageFiles.length > 0) {
-      images = await Promise.all(imageFiles.map((f) => toBase64(f)));
+    if (!thumbnail && processedColors.length > 0) {
+      thumbnail = processedColors[0].image;
+    } else if (!thumbnail && images.length > 0) {
+      thumbnail = images[0];
     }
 
     const payload = {
@@ -244,6 +278,7 @@ export default function AdminProductDetails({ children }) {
         long: sizeMeasurements[size]?.long || "",
         body: sizeMeasurements[size]?.body || ""
       })),
+      colors: processedColors,
       thumbnail,
       tags: formData.tags
         ? formData.tags.split(",").map((t) => t.trim()).filter(Boolean)
@@ -351,7 +386,7 @@ export default function AdminProductDetails({ children }) {
             <h2 className="text-lg font-semibold text-foreground">Edit Product</h2>
             <Button
               type="submit"
-              disabled={updateMutation.isPending || !isDirty}
+              disabled={updateMutation.isPending}
               className="rounded-lg"
             >
               <Save className="size-4" data-icon="inline-start" />
@@ -438,6 +473,71 @@ export default function AdminProductDetails({ children }) {
                           onChange={(e) => setSizeMeasurements(prev => ({ ...prev, [size]: { ...prev[size], body: e.target.value } }))}
                           className="flex-1"
                         />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="sm:col-span-2 space-y-3 rounded-lg border border-border p-4 bg-muted/20">
+                <label className="block text-sm font-medium text-foreground">Color Variants (Color Family with Image)</label>
+                <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                  <Input
+                    placeholder="Color name (e.g. Orange, Navy Blue)"
+                    value={colorNameInput}
+                    onChange={(e) => setColorNameInput(e.target.value)}
+                    className="flex-1"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={colorInputRef}
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setColorFile(file);
+                        setColorPreview(URL.createObjectURL(file));
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => colorInputRef.current?.click()}
+                    className="shrink-0 text-xs"
+                  >
+                    <Camera className="size-3.5 mr-1" />
+                    {colorPreview ? "Change Image" : "Upload Color Image"}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleAddColorVariant}
+                    className="shrink-0 text-xs"
+                  >
+                    Add Variant
+                  </Button>
+                </div>
+                {colorPreview && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <img src={colorPreview} alt="Color preview" className="size-10 rounded border object-cover" />
+                    <span className="text-xs text-muted-foreground">Image selected for {colorNameInput || "new color"}</span>
+                  </div>
+                )}
+
+                {colorVariants.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-3 pt-2 border-t border-border">
+                    {colorVariants.map((c, index) => (
+                      <div key={index} className="flex items-center gap-2 rounded-lg border border-border bg-background p-1.5 pr-3 shadow-sm">
+                        <img src={c.image} alt={c.name} className="size-9 rounded object-cover border" />
+                        <span className="text-xs font-semibold text-foreground">{c.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveColorVariant(index)}
+                          className="ml-1 text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="size-3.5" />
+                        </button>
                       </div>
                     ))}
                   </div>

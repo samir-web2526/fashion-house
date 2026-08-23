@@ -9,12 +9,13 @@ export function useAddToCart() {
   const { refetchCartCount } = useCart();
   const queryClient = useQueryClient();
 
-  const addToCart = async (product, quantity = 1, size = "") => {
+  const addToCart = async (product, quantity = 1, size = "", color = "", colorImage = "") => {
     try {
       addToLocalCart({
         productId: product._id,
         title: product.title,
-        thumbnail: product.thumbnail || product.images?.[0] || null,
+        thumbnail: colorImage || product.thumbnail || product.images?.[0] || null,
+        colorImage: colorImage || null,
         price: product.discountPercentage > 0
           ? (product.price * (1 - product.discountPercentage / 100)).toFixed(2)
           : product.price,
@@ -24,6 +25,7 @@ export function useAddToCart() {
           : product.category?.name || product.category?.slug || "",
         quantity,
         size,
+        color,
       });
       toast.success("Added to cart");
       refetchCartCount(getLocalCartCount());

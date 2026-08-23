@@ -156,8 +156,12 @@ export default function StickyCartDrawer() {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground">{item.title || "Product"}</p>
-                    <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
-                    <p className="mt-2 text-sm font-semibold text-foreground">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                      <span>Qty: {item.quantity}</span>
+                      {item.color && <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-foreground">Color: {item.color}</span>}
+                      {item.size && <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-foreground">Size: {item.size}</span>}
+                    </div>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
                       {item.price ? formatBDT(item.price * item.quantity) : "N/A"}
                     </p>
                   </div>

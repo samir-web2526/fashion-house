@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from "react";
 
 import { motion } from "framer-motion";
-import { Trophy, Flame } from "lucide-react";
+import { Trophy, Flame, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatBDT } from "@/utils/currency";
 import OrderModal from "@/components/ui/OrderModal";

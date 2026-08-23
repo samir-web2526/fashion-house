@@ -23,7 +23,9 @@ const createGuestOrderSchema = z.object({
     items: z.array(z.object({
         productId: z.string().min(1),
         quantity: z.number().min(1),
-        size: z.string().optional().default("")
+        size: z.string().optional().default(""),
+        color: z.string().optional().default(""),
+        colorImage: z.string().optional().default("")
     })).min(1, "At least one item is required"),
 
     paymentMethod: z.enum(

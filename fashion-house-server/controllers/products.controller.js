@@ -25,6 +25,7 @@ const createProduct = async (req, res) => {
             minimumOrderQuantity,
             sizes,
             sizeMeasurements,
+            colors,
             images,
             thumbnail
         } = req.body;
@@ -66,6 +67,7 @@ const createProduct = async (req, res) => {
             minimumOrderQuantity: normalizedMinimumOrderQuantity,
             sizes: sizes || [],
             sizeMeasurements: sizeMeasurements || [],
+            colors: colors || [],
 
             meta: {
                 createdAt: new Date(),
@@ -162,12 +164,17 @@ const getAllProducts = async (req, res) => {
                         description: 0, 
                         dimensions: 0, 
                         reviews: 0, 
-                        images: { $slice: 1 }, 
+                        images: 0, 
                         sizeMeasurements: 0, 
                         warrantyInformation: 0, 
                         shippingInformation: 0, 
                         returnPolicy: 0, 
-                        sizes: 0 
+                        sizes: 0,
+                        tags: 0,
+                        sku: 0,
+                        weight: 0,
+                        availabilityStatus: 0,
+                        minimumOrderQuantity: 0
                     })
                     .sort(sortOption)
                     .skip(skip)
@@ -187,12 +194,17 @@ const getAllProducts = async (req, res) => {
                         description: 0, 
                         dimensions: 0, 
                         reviews: 0, 
-                        images: { $slice: 1 }, 
+                        images: 0, 
                         sizeMeasurements: 0, 
                         warrantyInformation: 0, 
                         shippingInformation: 0, 
                         returnPolicy: 0, 
-                        sizes: 0 
+                        sizes: 0,
+                        tags: 0,
+                        sku: 0,
+                        weight: 0,
+                        availabilityStatus: 0,
+                        minimumOrderQuantity: 0
                     })
                     .sort(sortOption)
                     .toArray();
@@ -301,7 +313,23 @@ const getFlashSaleProducts = async (req, res) => {
                         }
                     },
                     {
-                        $project: { reviews: 0 }
+                        $project: {
+                            description: 0,
+                            dimensions: 0,
+                            reviews: 0,
+                            images: 0,
+                            sizeMeasurements: 0,
+                            warrantyInformation: 0,
+                            shippingInformation: 0,
+                            returnPolicy: 0,
+                            sizes: 0,
+                            meta: 0,
+                            tags: 0,
+                            sku: 0,
+                            weight: 0,
+                            availabilityStatus: 0,
+                            minimumOrderQuantity: 0
+                        }
                     },
                     {
                         $sort: {
@@ -377,7 +405,23 @@ const getBestSellingProducts = async (req, res) => {
                         }
                     },
                     {
-                        $project: { reviews: 0 }
+                        $project: {
+                            description: 0,
+                            dimensions: 0,
+                            reviews: 0,
+                            images: 0,
+                            sizeMeasurements: 0,
+                            warrantyInformation: 0,
+                            shippingInformation: 0,
+                            returnPolicy: 0,
+                            sizes: 0,
+                            meta: 0,
+                            tags: 0,
+                            sku: 0,
+                            weight: 0,
+                            availabilityStatus: 0,
+                            minimumOrderQuantity: 0
+                        }
                     }
                 ])
                 .toArray();
@@ -396,7 +440,23 @@ const getBestSellingProducts = async (req, res) => {
                     })
                     .sort({ rating: -1 })
                     .limit(limitNeeded)
-                    .project({ reviews: 0 })
+                    .project({
+                        description: 0,
+                        dimensions: 0,
+                        reviews: 0,
+                        images: 0,
+                        sizeMeasurements: 0,
+                        warrantyInformation: 0,
+                        shippingInformation: 0,
+                        returnPolicy: 0,
+                        sizes: 0,
+                        meta: 0,
+                        tags: 0,
+                        sku: 0,
+                        weight: 0,
+                        availabilityStatus: 0,
+                        minimumOrderQuantity: 0
+                    })
                     .toArray();
 
                 products = [
@@ -438,7 +498,23 @@ const getNewArrivals = async (req, res) => {
 
             return await productsCollection
                 .find({})
-                .project({ reviews: 0 })
+                .project({
+                    description: 0,
+                    dimensions: 0,
+                    reviews: 0,
+                    images: 0,
+                    sizeMeasurements: 0,
+                    warrantyInformation: 0,
+                    shippingInformation: 0,
+                    returnPolicy: 0,
+                    sizes: 0,
+                    meta: 0,
+                    tags: 0,
+                    sku: 0,
+                    weight: 0,
+                    availabilityStatus: 0,
+                    minimumOrderQuantity: 0
+                })
                 .sort({
                     _id: -1
                 })
@@ -484,7 +560,23 @@ const getFeaturedProducts = async (req, res) => {
 
             return await productsCollection
                 .find({})
-                .project({ reviews: 0 })
+                .project({
+                    description: 0,
+                    dimensions: 0,
+                    reviews: 0,
+                    images: 0,
+                    sizeMeasurements: 0,
+                    warrantyInformation: 0,
+                    shippingInformation: 0,
+                    returnPolicy: 0,
+                    sizes: 0,
+                    meta: 0,
+                    tags: 0,
+                    sku: 0,
+                    weight: 0,
+                    availabilityStatus: 0,
+                    minimumOrderQuantity: 0
+                })
                 .sort({ rating: -1 })
                 .limit(20)
                 .toArray();

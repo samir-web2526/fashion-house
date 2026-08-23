@@ -25,12 +25,16 @@ export function setLocalCart(items) {
 export function addToLocalCart(item) {
   const cart = getLocalCart();
   const existing = cart.find(
-    (c) => c.productId === item.productId && (c.size || "") === (item.size || "")
+    (c) =>
+      c.productId === item.productId &&
+      (c.size || "") === (item.size || "") &&
+      (c.color || "") === (item.color || "")
   );
   if (existing) {
     existing.quantity += item.quantity;
     existing.title = item.title || existing.title;
     existing.thumbnail = item.thumbnail || existing.thumbnail;
+    existing.colorImage = item.colorImage || existing.colorImage;
     existing.price = item.price || existing.price;
     existing.stock = item.stock ?? existing.stock;
     existing.category = item.category || existing.category;
@@ -41,26 +45,30 @@ export function addToLocalCart(item) {
   return cart;
 }
 
-export function updateLocalCartItem(productId, quantity, size = "") {
+export function updateLocalCartItem(productId, quantity, size = "", color = "") {
   let cart = getLocalCart();
+  const isMatch = (c) =>
+    c.productId === productId &&
+    (c.size || "") === (size || "") &&
+    (c.color || "") === (color || "");
+
   if (quantity <= 0) {
-    cart = cart.filter(
-      (c) => !(c.productId === productId && (c.size || "") === (size || ""))
-    );
+    cart = cart.filter((c) => !isMatch(c));
   } else {
-    cart = cart.map((c) =>
-      c.productId === productId && (c.size || "") === (size || "")
-        ? { ...c, quantity }
-        : c
-    );
+    cart = cart.map((c) => (isMatch(c) ? { ...c, quantity } : c));
   }
   setLocalCart(cart);
   return cart;
 }
 
-export function removeFromLocalCart(productId, size = "") {
+export function removeFromLocalCart(productId, size = "", color = "") {
   const cart = getLocalCart().filter(
-    (c) => !(c.productId === productId && (c.size || "") === (size || ""))
+    (c) =>
+      !(
+        c.productId === productId &&
+        (c.size || "") === (size || "") &&
+        (c.color || "") === (color || "")
+      )
   );
   setLocalCart(cart);
   return cart;

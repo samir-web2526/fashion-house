@@ -131,6 +131,8 @@ export default function Checkout({ children }) {
         productId: item.productId,
         quantity: item.quantity,
         size: item.size || "",
+        color: item.color || "",
+        colorImage: item.colorImage || "",
       })),
       shippingAddress: {
         fullName: data.fullName,

@@ -219,18 +219,28 @@ export default function AdminOrderDetails({ children }) {
                 <h2 className="text-sm font-semibold text-foreground">Items ({order.totalItems})</h2>
               </div>
               <div className="divide-y divide-border">
-                {order.items?.map((item) => (
-                  <div key={item.productId} className="flex gap-4 py-3 first:pt-0 last:pb-0">
+                {order.items?.map((item, index) => (
+                  <div key={index} className="flex gap-4 py-3 first:pt-0 last:pb-0">
                     <img
-                      src={item.thumbnail}
+                      src={item.colorImage || item.thumbnail}
                       alt={item.title}
-                      className="size-16 shrink-0 rounded-lg object-cover"
+                      className="size-16 shrink-0 rounded-lg object-cover border border-border"
                     />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground">{item.title}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        Qty: {item.quantity} &times; ৳{item.price?.toLocaleString()}
-                      </p>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                        <span>Qty: {item.quantity} &times; ৳{item.price?.toLocaleString()}</span>
+                        {item.color && (
+                          <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-foreground">
+                            Color: {item.color}
+                          </span>
+                        )}
+                        {item.size && (
+                          <span className="rounded bg-muted px-1.5 py-0.5 font-medium text-foreground">
+                            Size: {item.size}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <span className="text-sm font-medium text-foreground">
                       ৳{item.subtotal?.toLocaleString()}

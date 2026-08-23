@@ -3,7 +3,7 @@ const { ObjectId } = require("mongodb");
 
 const addToCart = async (req, res) => {
     try {
-        const { productId, quantity, size } = req.body;
+        const { productId, quantity, size, color, colorImage } = req.body;
         const db = getDB();
         const cartsCollection = db.collection("carts");
 
@@ -18,7 +18,9 @@ const addToCart = async (req, res) => {
                     {
                         productId: new ObjectId(productId),
                         quantity: Number(quantity),
-                        size: size || ""
+                        size: size || "",
+                        color: color || "",
+                        colorImage: colorImage || ""
                     }
                 ],
                 createdAt: new Date(),
@@ -33,14 +35,20 @@ const addToCart = async (req, res) => {
         }
 
         const existingProduct = cart.items.find(
-            item => item.productId.toString() === productId && (item.size || "") === (size || "")
+            item => item.productId.toString() === productId && (item.size || "") === (size || "") && (item.color || "") === (color || "")
         );
 
         if (existingProduct) {
             await cartsCollection.updateOne(
                 {
                     userId: new ObjectId(req.user.id),
-                    "items.productId": new ObjectId(productId)
+                    items: {
+                        $elemMatch: {
+                            productId: new ObjectId(productId),
+                            size: size || "",
+                            color: color || ""
+                        }
+                    }
                 },
                 {
                     $inc: {
@@ -61,7 +69,9 @@ const addToCart = async (req, res) => {
                         items: {
                             productId: new ObjectId(productId),
                             quantity: Number(quantity),
-                            size: size || ""
+                            size: size || "",
+                            color: color || "",
+                            colorImage: colorImage || ""
                         }
                     },
                     $set: {
@@ -114,12 +124,14 @@ const getCart = async (req, res) => {
                     _id: 0,
                     productId: "$product._id",
                     title: "$product.title",
-                    thumbnail: "$product.thumbnail",
+                    thumbnail: { $ifNull: ["$items.colorImage", "$product.thumbnail"] },
                     price: "$product.price",
                     stock: "$product.stock",
                     brand: "$product.brand",
                     category: "$product.category",
                     size: "$items.size",
+                    color: "$items.color",
+                    colorImage: "$items.colorImage",
                     quantity: "$items.quantity",
                     subtotal: {
                         $multiply: [

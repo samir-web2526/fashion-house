@@ -29,6 +29,11 @@ const createProductSchema = z.object({
         body: z.string().optional()
     })).optional().default([]),
 
+    colors: z.array(z.object({
+        name: z.string(),
+        image: z.string().optional().default("")
+    })).optional().default([]),
+
     images: z.array(z.string()).optional().default([]),
     thumbnail: z.string().optional().default("")
 });
@@ -61,6 +66,11 @@ const updateProductSchema = z.object({
         size: z.string(),
         long: z.string().optional(),
         body: z.string().optional()
+    })).optional(),
+
+    colors: z.array(z.object({
+        name: z.string(),
+        image: z.string().optional().default("")
     })).optional(),
 
     images: z.array(z.string()).optional(),
