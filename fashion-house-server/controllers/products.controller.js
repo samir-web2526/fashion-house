@@ -142,7 +142,7 @@ const getAllProducts = async (req, res) => {
             query.brand = brand;
         }
 
-        let sortOption = { "meta.createdAt": -1 };
+        let sortOption = { _id: -1 };
 
         if (sort === "asc") {
             sortOption = { price: 1 };
@@ -170,6 +170,7 @@ const getAllProducts = async (req, res) => {
                         shippingInformation: 0, 
                         returnPolicy: 0, 
                         sizes: 0,
+                        colors: 0,
                         tags: 0,
                         sku: 0,
                         weight: 0,
@@ -200,6 +201,7 @@ const getAllProducts = async (req, res) => {
                         shippingInformation: 0, 
                         returnPolicy: 0, 
                         sizes: 0,
+                        colors: 0,
                         tags: 0,
                         sku: 0,
                         weight: 0,

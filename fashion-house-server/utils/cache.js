@@ -52,7 +52,37 @@ const warmUpCache = async (db) => {
         // 3. Warm up Orders
         const ordersCollection = db.collection("orders");
         await withCache("orders_null_null_", 15, async () => {
-            const orders = await ordersCollection.find({}).sort({ createdAt: -1 }).toArray();
+            const orders = await ordersCollection.find({})
+                .project({
+                    orderStatus: 1,
+                    paymentMethod: 1,
+                    paymentStatus: 1,
+                    totalPrice: 1,
+                    totalItems: 1,
+                    deliveryArea: 1,
+                    shippingAddress: {
+                        fullName: 1,
+                        phone: 1,
+                        address: 1
+                    },
+                    createdAt: 1,
+                    updatedAt: 1,
+                    items: {
+                        $map: {
+                            input: { $ifNull: ["$items", []] },
+                            as: "item",
+                            in: {
+                                title: "$$item.title",
+                                thumbnail: "$$item.thumbnail",
+                                quantity: "$$item.quantity",
+                                price: "$$item.price",
+                                subtotal: "$$item.subtotal"
+                            }
+                        }
+                    }
+                })
+                .sort({ createdAt: -1 })
+                .toArray();
             return {
                 totalOrders: orders.length,
                 orders
@@ -73,13 +103,14 @@ const warmUpCache = async (db) => {
                     shippingInformation: 0, 
                     returnPolicy: 0, 
                     sizes: 0,
+                    colors: 0,
                     tags: 0,
                     sku: 0,
                     weight: 0,
                     availabilityStatus: 0,
                     minimumOrderQuantity: 0
                 })
-                .sort({ "meta.createdAt": -1 })
+                .sort({ _id: -1 })
                 .toArray();
             return {
                 totalProducts: products.length,

@@ -321,6 +321,34 @@ const getMyOrders = async (req, res) => {
             .find({
                 userId: new ObjectId(req.user.id)
             })
+            .project({
+                orderStatus: 1,
+                paymentMethod: 1,
+                paymentStatus: 1,
+                totalPrice: 1,
+                totalItems: 1,
+                deliveryArea: 1,
+                shippingAddress: {
+                    fullName: 1,
+                    phone: 1,
+                    address: 1
+                },
+                createdAt: 1,
+                updatedAt: 1,
+                items: {
+                    $map: {
+                        input: { $ifNull: ["$items", []] },
+                        as: "item",
+                        in: {
+                            title: "$$item.title",
+                            thumbnail: "$$item.thumbnail",
+                            quantity: "$$item.quantity",
+                            price: "$$item.price",
+                            subtotal: "$$item.subtotal"
+                        }
+                    }
+                }
+            })
             .sort({
                 createdAt: -1
             })
@@ -356,12 +384,42 @@ const getAllOrders = async (req, res) => {
 
         const cacheKey = `orders_${page}_${limit}_${status}`;
         const result = await withCache(cacheKey, 15, async () => {
+            const listProjection = {
+                orderStatus: 1,
+                paymentMethod: 1,
+                paymentStatus: 1,
+                totalPrice: 1,
+                totalItems: 1,
+                deliveryArea: 1,
+                shippingAddress: {
+                    fullName: 1,
+                    phone: 1,
+                    address: 1
+                },
+                createdAt: 1,
+                updatedAt: 1,
+                items: {
+                    $map: {
+                        input: { $ifNull: ["$items", []] },
+                        as: "item",
+                        in: {
+                            title: "$$item.title",
+                            thumbnail: "$$item.thumbnail",
+                            quantity: "$$item.quantity",
+                            price: "$$item.price",
+                            subtotal: "$$item.subtotal"
+                        }
+                    }
+                }
+            };
+
             if (page && limit) {
                 const skip = (page - 1) * limit;
                 const totalOrders = await ordersCollection.countDocuments(query);
 
                 const orders = await ordersCollection
                     .find(query)
+                    .project(listProjection)
                     .sort({
                         createdAt: -1
                     })
@@ -378,6 +436,7 @@ const getAllOrders = async (req, res) => {
             } else {
                 const orders = await ordersCollection
                     .find(query)
+                    .project(listProjection)
                     .sort({
                         createdAt: -1
                     })
