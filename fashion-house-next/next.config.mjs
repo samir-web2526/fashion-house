@@ -10,9 +10,11 @@
 
 /** @type {import('next').NextConfig} */
 
+const isVercel = process.env.VERCEL === '1' || Boolean(process.env.VERCEL);
+
 const nextConfig = {
   reactStrictMode: true,
-  output: 'standalone',
+  ...(isVercel ? {} : { output: 'standalone' }),
 };
 
-export default nextConfig;
+export default nextConfig;

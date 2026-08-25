@@ -112,12 +112,13 @@ export default function Products({ initialCategories, initialProducts }) {
     queryKey: ["products", { search: searchQuery, category: activeCategorySlugs, sort, page, limit }],
     queryFn: () => getProducts({ search: searchQuery, category: activeCategorySlugs, sort, page, limit }),
     placeholderData: keepPreviousData,
-    initialData: (!searchQuery && !activeCategorySlugs && sort === "newest" && page === 1) ? initialProducts : undefined,
+    initialData: (!searchQuery && !activeCategorySlugs && sort === "newest" && page === 1 && initialProducts?.products?.length > 0) ? initialProducts : undefined,
   });
 
   const filteredProducts = data?.products ?? [];
   const totalPages = data?.totalPages ?? 1;
   const totalProductsCount = data?.totalProducts ?? 0;
+  const showSkeleton = isLoading || (isFetching && filteredProducts.length === 0);
 
   const handleCategoryChange = (slug) => {
     updateCategory(slug === selectedCategory ? "" : slug);
@@ -374,7 +375,7 @@ export default function Products({ initialCategories, initialProducts }) {
             </div>
 
             <div className="pt-4">
-              {isLoading ? (
+              {showSkeleton ? (
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                   {Array.from({ length: 12 }).map((_, i) => (
                     <ProductSkeleton key={i} />
@@ -402,7 +403,7 @@ export default function Products({ initialCategories, initialProducts }) {
                 </div>
               )}
 
-              {!isLoading && totalPages > 1 && (
+              {!showSkeleton && totalPages > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-4">
                   <Button
                     variant="outline"

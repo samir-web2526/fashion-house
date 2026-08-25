@@ -24,10 +24,10 @@ function CategoriesSkeleton() {
 }
 
 export default function Categories({ initialData }) {
-  const { data: categoriesData, isLoading } = useQuery({
+  const { data: categoriesData, isLoading, isFetching } = useQuery({
     queryKey: ["categories-with-counts"],
     queryFn: getCategoriesWithCounts,
-    initialData,
+    initialData: (Array.isArray(initialData) && initialData.length > 0) ? initialData : undefined,
   });
 
   const categories = useMemo(() => {
@@ -40,6 +40,8 @@ export default function Categories({ initialData }) {
       count: parent.productCount || 0,
     }));
   }, [categoriesData]);
+
+  const showSkeleton = isLoading || (isFetching && categories.length === 0);
 
   return (
     <section id="categories" className="bg-background py-6 sm:py-10">
@@ -56,7 +58,7 @@ export default function Categories({ initialData }) {
           </h2>
         </motion.div>
 
-        {isLoading ? (
+        {showSkeleton ? (
           <CategoriesSkeleton />
         ) : categories.length === 0 ? (
           <p className="py-12 text-center text-sm text-muted-foreground">

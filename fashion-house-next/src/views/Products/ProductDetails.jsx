@@ -398,34 +398,64 @@ export default function ProductDetails({ children }) {
               </ul>
             </div>
 
-            {/* Size Measurement Block */}
-            {product?.sizeMeasurements && product.sizeMeasurements.length > 0 ? (
-              <div className="mt-2 overflow-hidden rounded border border-border">
-                <div className="bg-muted py-2 text-center text-sm font-bold text-foreground">
-                  Size Measurement (Inches)
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/30 text-muted-foreground">
-                        <th className="px-4 py-2 font-medium text-center">Size</th>
-                        <th className="px-4 py-2 font-medium text-center">Long</th>
-                        <th className="px-4 py-2 font-medium text-center">Body</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {product.sizeMeasurements.map((m, i) => (
-                        <tr key={i} className="hover:bg-muted/20">
-                          <td className="px-4 py-2 font-bold text-foreground text-center">{m.size}</td>
-                          <td className="px-4 py-2 text-foreground text-center">{m.long || "-"}</td>
-                          <td className="px-4 py-2 text-foreground text-center">{m.body || "-"}</td>
+            {/* Dynamic Size Measurement Block */}
+            {product?.sizeMeasurements && product.sizeMeasurements.length > 0 ? (() => {
+              const columnKeysSet = new Set();
+              product.sizeMeasurements.forEach((m) => {
+                Object.keys(m || {}).forEach((k) => {
+                  if (k !== "size" && k !== "_id" && m[k]) columnKeysSet.add(k);
+                });
+              });
+              const columnKeys = Array.from(columnKeysSet);
+
+              const FIELD_LABELS = {
+                chest: "Chest (বুক)",
+                long: "Length (দৈর্ঘ্য)",
+                body: "Body (বুক)",
+                shoulder: "Shoulder (কাধ)",
+                sleeve: "Sleeve (হাতা)",
+                waist: "Waist (কোমর)",
+                hip: "Hip (হিপ)",
+                thigh: "Thigh (রান)",
+                ageGroup: "Age (বয়স)",
+                footLength: "Foot Length",
+                euSize: "EU/UK Size",
+              };
+
+              return (
+                <div className="mt-2 overflow-hidden rounded border border-border">
+                  <div className="bg-muted py-2 text-center text-sm font-bold text-foreground">
+                    Size Measurement (Inches)
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/30 text-muted-foreground">
+                          <th className="px-3 py-2 font-semibold text-center">Size</th>
+                          {columnKeys.map((key) => (
+                            <th key={key} className="px-3 py-2 font-semibold text-center">
+                              {FIELD_LABELS[key] || key}
+                            </th>
+                          ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {product.sizeMeasurements.map((m, i) => (
+                          <tr key={i} className="hover:bg-muted/20">
+                            <td className="px-3 py-2 font-bold text-foreground text-center">{m.size}</td>
+                            {columnKeys.map((key) => (
+                              <td key={key} className="px-3 py-2 text-foreground text-center">
+                                {m[key] || "-"}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            ) : (
+              );
+            })() : (
               <div className="mt-2 overflow-hidden rounded border border-border">
                 <div className="bg-muted py-2 text-center text-sm font-bold text-foreground">
                   Size Measurement

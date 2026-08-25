@@ -25,9 +25,7 @@ const createProductSchema = z.object({
     sizes: z.array(z.string()).optional().default([]),
     sizeMeasurements: z.array(z.object({
         size: z.string(),
-        long: z.string().optional(),
-        body: z.string().optional()
-    })).optional().default([]),
+    }).passthrough()).optional().default([]),
 
     colors: z.array(z.object({
         name: z.string(),
@@ -64,9 +62,7 @@ const updateProductSchema = z.object({
     sizes: z.array(z.string()).optional(),
     sizeMeasurements: z.array(z.object({
         size: z.string(),
-        long: z.string().optional(),
-        body: z.string().optional()
-    })).optional(),
+    }).passthrough()).optional(),
 
     colors: z.array(z.object({
         name: z.string(),

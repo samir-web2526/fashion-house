@@ -37,14 +37,15 @@ export default function FlashSale({ initialData }) {
   const { siteName } = useSettings();
   usePageTitle("Flash Sale");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching } = useQuery({
     queryKey: ["flash-sale"],
     queryFn: getFlashSaleProducts,
-    initialData,
+    initialData: (initialData?.products?.length > 0) ? initialData : undefined,
   });
 
   const products = data?.products ?? [];
   const maxStock = data?.maxStock ?? 1;
+  const showSkeleton = isLoading || (isFetching && products.length === 0);
 
   return (
     <section id="flash-sale" className="relative overflow-hidden bg-linear-to-b from-gray-100/80 via-background to-background py-16 sm:py-20 dark:from-gray-900/20">
@@ -79,7 +80,7 @@ export default function FlashSale({ initialData }) {
           <CountdownTimer />
         </motion.div>
 
-        {isLoading ? (
+        {showSkeleton ? (
           <FlashSaleSkeleton />
         ) : products.length === 0 ? (
           <p className="py-12 text-center text-sm text-muted-foreground">

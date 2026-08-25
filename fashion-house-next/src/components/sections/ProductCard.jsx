@@ -69,6 +69,8 @@ export default function ProductCard({ product, index, badge }) {
     : null;
   const isOutOfStock = product.stock === 0;
 
+  const effectiveBadge = badge !== undefined ? badge : product.badge;
+
   return (
     <>
       <motion.div
@@ -86,7 +88,7 @@ export default function ProductCard({ product, index, badge }) {
         }}
       >
         <Link href={`/product/${product._id}`} className="group block h-full">
-          <div className={`flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${badgeConfig[badge]?.ring ?? ""}`}>
+          <div className={`flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${badgeConfig[effectiveBadge]?.ring ?? ""}`}>
             <div className="relative aspect-square overflow-hidden bg-muted">
               <img
                 src={product.thumbnail || product.images?.[0] || undefined}
@@ -103,11 +105,11 @@ export default function ProductCard({ product, index, badge }) {
                 </div>
               )}
 
-              {badge && badgeConfig[badge] && (
+              {effectiveBadge && badgeConfig[effectiveBadge] && (
                 <div className={`absolute top-3 z-20 ${hasDiscount ? "left-13" : "left-3"}`}>
-                  <Badge className={`gap-1 text-[11px] font-semibold ${badgeConfig[badge].className}`}>
-                    {(() => { const Icon = badgeConfig[badge].icon; return <Icon className="size-3" />; })()}
-                    {badgeConfig[badge].label}
+                  <Badge className={`gap-1 text-[11px] font-semibold ${badgeConfig[effectiveBadge].className}`}>
+                    {(() => { const Icon = badgeConfig[effectiveBadge].icon; return <Icon className="size-3" />; })()}
+                    {badgeConfig[effectiveBadge].label}
                   </Badge>
                 </div>
               )}

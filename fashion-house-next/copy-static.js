@@ -19,10 +19,15 @@ function copyDir(src, dest) {
 }
 
 try {
-  console.log('Copying static assets for standalone build...');
-  copyDir(path.join(__dirname, 'public'), path.join(__dirname, '.next', 'standalone', 'public'));
-  copyDir(path.join(__dirname, '.next', 'static'), path.join(__dirname, '.next', 'standalone', '.next', 'static'));
-  console.log('Static assets copied successfully!');
+  const standalonePath = path.join(__dirname, '.next', 'standalone');
+  if (fs.existsSync(standalonePath)) {
+    console.log('Copying static assets for standalone build...');
+    copyDir(path.join(__dirname, 'public'), path.join(standalonePath, 'public'));
+    copyDir(path.join(__dirname, '.next', 'static'), path.join(standalonePath, '.next', 'static'));
+    console.log('Static assets copied successfully!');
+  } else {
+    console.log('Skipping static copy: standalone build output not active.');
+  }
 } catch (err) {
   console.error('Error copying static assets:', err);
 }

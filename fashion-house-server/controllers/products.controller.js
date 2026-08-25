@@ -96,6 +96,45 @@ const createProduct = async (req, res) => {
     }
 };
 
+const getBestSellingIds = async (db) => {
+    return await withCache("bestSellingIdsSet", 30, async () => {
+        const ordersCollection = db.collection("orders");
+        const productsCollection = db.collection("products");
+
+        let bestProducts = await ordersCollection
+            .aggregate([
+                { $unwind: "$items" },
+                {
+                    $group: {
+                        _id: "$items.productId",
+                        totalSold: { $sum: "$items.quantity" }
+                    }
+                },
+                { $sort: { totalSold: -1 } },
+                { $limit: 8 }
+            ])
+            .toArray();
+
+        let bestIds = bestProducts.map(p => (p._id ? p._id.toString() : ""));
+        if (bestIds.length < 8) {
+            const fallback = await productsCollection
+                .find({
+                    _id: {
+                        $nin: bestIds.map(id => {
+                            try { return new ObjectId(id); } catch { return id; }
+                        })
+                    }
+                })
+                .sort({ rating: -1 })
+                .limit(8 - bestIds.length)
+                .project({ _id: 1 })
+                .toArray();
+            bestIds = [...bestIds, ...fallback.map(p => (p._id ? p._id.toString() : ""))];
+        }
+        return bestIds;
+    });
+};
+
 const getAllProducts = async (req, res) => {
 
     try {
@@ -152,6 +191,14 @@ const getAllProducts = async (req, res) => {
 
         const cacheKey = `products_${page}_${limit}_${search}_${category}_${brand}_${sort}`;
         const result = await withCache(cacheKey, 15, async () => {
+            const bestSellingIds = await getBestSellingIds(db);
+            const bestSellingIdsSet = new Set(bestSellingIds);
+
+            const formatProducts = (prods) => prods.map(p => ({
+                ...p,
+                badge: p.badge || (bestSellingIdsSet.has(p._id ? p._id.toString() : "") ? "best-seller" : null)
+            }));
+
             if (page && limit) {
                 const skip = (page - 1) * limit;
                 const totalProducts = Object.keys(query).length === 0 
@@ -186,7 +233,7 @@ const getAllProducts = async (req, res) => {
                     totalProducts,
                     currentPage: page,
                     totalPages: Math.ceil(totalProducts / limit),
-                    products,
+                    products: formatProducts(products),
                 };
             } else {
                 const products = await productsCollection
@@ -213,7 +260,7 @@ const getAllProducts = async (req, res) => {
 
                 return {
                     totalProducts: products.length,
-                    products,
+                    products: formatProducts(products),
                 };
             }
         });

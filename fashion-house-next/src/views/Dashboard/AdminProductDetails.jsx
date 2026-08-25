@@ -20,6 +20,64 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"];
 
+const MEASUREMENT_PRESETS = {
+  tops: {
+    label: "Shirt / Panjabi / Polo / T-Shirt",
+    fields: [
+      { key: "chest", label: "Chest (বুক)", placeholder: "e.g. 38" },
+      { key: "long", label: "Length / Long (দৈর্ঘ্য)", placeholder: "e.g. 28" },
+      { key: "shoulder", label: "Shoulder (কাধ)", placeholder: "e.g. 17" },
+      { key: "sleeve", label: "Sleeve (হাতা)", placeholder: "e.g. 24" },
+    ],
+  },
+  bottoms: {
+    label: "Pant / Pajama / Trouser",
+    fields: [
+      { key: "waist", label: "Waist (কোমর)", placeholder: "e.g. 32" },
+      { key: "long", label: "Length / Long (দৈর্ঘ্য)", placeholder: "e.g. 40" },
+      { key: "hip", label: "Hip (হিপ)", placeholder: "e.g. 42" },
+      { key: "thigh", label: "Thigh (রান)", placeholder: "e.g. 24" },
+    ],
+  },
+  baby: {
+    label: "Baby Wear / Kids",
+    fields: [
+      { key: "chest", label: "Chest (বুক)", placeholder: "e.g. 24" },
+      { key: "long", label: "Length (দৈর্ঘ্য)", placeholder: "e.g. 20" },
+      { key: "ageGroup", label: "Age Group (বয়স)", placeholder: "e.g. 2-3 Years" },
+    ],
+  },
+  shoes: {
+    label: "Shoes / Footwear",
+    fields: [
+      { key: "footLength", label: "Foot Length (পায়ের দৈর্ঘ্য)", placeholder: "e.g. 26 cm" },
+      { key: "euSize", label: "EU/UK Size", placeholder: "e.g. EU 41" },
+    ],
+  },
+  standard: {
+    label: "Standard / Custom (Long & Body)",
+    fields: [
+      { key: "long", label: "Long (দৈর্ঘ্য)", placeholder: "e.g. 28" },
+      { key: "body", label: "Body (বুক)", placeholder: "e.g. 38" },
+    ],
+  },
+};
+
+function detectPreset(sizeMeasurementsArray) {
+  if (!sizeMeasurementsArray || sizeMeasurementsArray.length === 0) return "tops";
+  const allKeys = new Set();
+  sizeMeasurementsArray.forEach((m) => {
+    Object.keys(m || {}).forEach((k) => {
+      if (k !== "size" && k !== "_id") allKeys.add(k);
+    });
+  });
+  if (allKeys.has("waist") || allKeys.has("hip") || allKeys.has("thigh")) return "bottoms";
+  if (allKeys.has("footLength") || allKeys.has("euSize")) return "shoes";
+  if (allKeys.has("ageGroup")) return "baby";
+  if (allKeys.has("chest") || allKeys.has("shoulder") || allKeys.has("sleeve")) return "tops";
+  return "standard";
+}
+
 const updateSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").optional(),
   description: z.string().min(10, "Description must be at least 10 characters").optional(),
@@ -63,6 +121,7 @@ export default function AdminProductDetails({ children }) {
   const imagesInputRef = useRef(null);
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [sizeMeasurements, setSizeMeasurements] = useState({});
+  const [measurementPreset, setMeasurementPreset] = useState("tops");
   const [colorVariants, setColorVariants] = useState([]);
   const [colorNameInput, setColorNameInput] = useState("");
   const [colorFile, setColorFile] = useState(null);
@@ -119,11 +178,14 @@ export default function AdminProductDetails({ children }) {
     if (product.sizeMeasurements) {
       const initialMeasurements = {};
       product.sizeMeasurements.forEach(m => {
-        initialMeasurements[m.size] = { long: m.long, body: m.body };
+        const { size, _id, ...rest } = m;
+        initialMeasurements[size] = rest;
       });
       setSizeMeasurements(initialMeasurements);
+      setMeasurementPreset(detectPreset(product.sizeMeasurements));
     } else {
       setSizeMeasurements({});
+      setMeasurementPreset("tops");
     }
     reset({
       title: product.title ?? "",
@@ -234,10 +296,13 @@ export default function AdminProductDetails({ children }) {
   };
 
   const onSubmit = async (formData) => {
+    const activeFields = MEASUREMENT_PRESETS[measurementPreset]?.fields || [];
     if (selectedSizes.length > 0) {
       for (const size of selectedSizes) {
-        if (!sizeMeasurements[size]?.long || !sizeMeasurements[size]?.body) {
-          toast.error(`Please provide both Long and Body measurements for size ${size}`);
+        const m = sizeMeasurements[size];
+        const hasAnyValue = activeFields.some((f) => m?.[f.key]?.toString().trim());
+        if (!hasAnyValue) {
+          toast.error(`Please provide measurements for size ${size}`);
           return;
         }
       }
@@ -273,11 +338,16 @@ export default function AdminProductDetails({ children }) {
       returnPolicy: formData.returnPolicy,
       minimumOrderQuantity: formData.minimumOrderQuantity || undefined,
       sizes: selectedSizes,
-      sizeMeasurements: selectedSizes.map(size => ({
-        size,
-        long: sizeMeasurements[size]?.long || "",
-        body: sizeMeasurements[size]?.body || ""
-      })),
+      sizeMeasurements: selectedSizes.map((size) => {
+        const mData = sizeMeasurements[size] || {};
+        const measurementObj = { size };
+        activeFields.forEach((f) => {
+          if (mData[f.key] !== undefined && mData[f.key] !== "") {
+            measurementObj[f.key] = mData[f.key];
+          }
+        });
+        return measurementObj;
+      }),
       colors: processedColors,
       thumbnail,
       tags: formData.tags
@@ -456,25 +526,51 @@ export default function AdminProductDetails({ children }) {
                   ))}
                 </div>
                 {selectedSizes.length > 0 && (
-                  <div className="space-y-3 rounded-lg border border-border p-4 bg-muted/30">
-                    <label className="block text-sm font-medium text-foreground">Size Measurements (Inches) *</label>
-                    {selectedSizes.map(size => (
-                      <div key={size} className="flex flex-col sm:flex-row gap-3 sm:items-center">
-                        <div className="w-12 font-bold text-sm bg-foreground text-background text-center py-1.5 rounded">{size}</div>
-                        <Input
-                          placeholder="Long (e.g. 28)"
-                          value={sizeMeasurements[size]?.long || ""}
-                          onChange={(e) => setSizeMeasurements(prev => ({ ...prev, [size]: { ...prev[size], long: e.target.value } }))}
-                          className="flex-1"
-                        />
-                        <Input
-                          placeholder="Body (e.g. 38)"
-                          value={sizeMeasurements[size]?.body || ""}
-                          onChange={(e) => setSizeMeasurements(prev => ({ ...prev, [size]: { ...prev[size], body: e.target.value } }))}
-                          className="flex-1"
-                        />
+                  <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/30">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/50 pb-3">
+                      <label className="block text-sm font-bold text-foreground">Size Measurements (Inches)</label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-muted-foreground">Type:</span>
+                        <select
+                          value={measurementPreset}
+                          onChange={(e) => setMeasurementPreset(e.target.value)}
+                          className="rounded-md border border-border bg-background px-2.5 py-1 text-xs outline-none focus:border-ring font-medium"
+                        >
+                          {Object.entries(MEASUREMENT_PRESETS).map(([key, preset]) => (
+                            <option key={key} value={key}>
+                              {preset.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    ))}
+                    </div>
+
+                    {selectedSizes.map((size) => {
+                      const activeFields = MEASUREMENT_PRESETS[measurementPreset]?.fields || [];
+                      return (
+                        <div key={size} className="flex flex-col gap-2 rounded-lg border border-border/60 bg-background p-3">
+                          <div className="w-12 font-bold text-xs bg-foreground text-background text-center py-1 rounded">{size}</div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                            {activeFields.map((f) => (
+                              <div key={f.key} className="space-y-1">
+                                <label className="text-[11px] font-medium text-muted-foreground block">{f.label}</label>
+                                <Input
+                                  placeholder={f.placeholder}
+                                  value={sizeMeasurements[size]?.[f.key] || ""}
+                                  onChange={(e) =>
+                                    setSizeMeasurements((prev) => ({
+                                      ...prev,
+                                      [size]: { ...prev[size], [f.key]: e.target.value },
+                                    }))
+                                  }
+                                  className="h-8 text-xs"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

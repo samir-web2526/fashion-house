@@ -34,13 +34,14 @@ export default function BestSellingProducts({ initialData }) {
   const { siteName } = useSettings();
   usePageTitle("Best Selling Products");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching } = useQuery({
     queryKey: ["best-selling-products"],
     queryFn: getBestSellingProducts,
-    initialData,
+    initialData: (initialData?.products?.length > 0) ? initialData : undefined,
   });
 
   const bestSellingProducts = data?.products ?? [];
+  const showSkeleton = isLoading || (isFetching && bestSellingProducts.length === 0);
 
   return (
     <section id="best-selling" className="bg-background pb-16 pt-6 sm:pb-20 sm:pt-8">
@@ -63,7 +64,7 @@ export default function BestSellingProducts({ initialData }) {
           </p>
         </motion.div>
 
-        {isLoading ? (
+        {showSkeleton ? (
           <BestSellingSkeleton />
         ) : bestSellingProducts.length === 0 ? (
           <p className="py-12 text-center text-sm text-muted-foreground">
@@ -76,7 +77,7 @@ export default function BestSellingProducts({ initialData }) {
                 key={product._id}
                 product={product}
                 index={i}
-                badge={product.badge}
+                badge={null}
               />
             ))}
           </div>

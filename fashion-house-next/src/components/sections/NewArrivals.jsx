@@ -29,13 +29,14 @@ function NewArrivalsSkeleton() {
 export default function NewArrivals({ initialData }) {
   const scrollRef = useRef(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching } = useQuery({
     queryKey: ["new-arrivals"],
     queryFn: getNewArrivals,
-    initialData,
+    initialData: (initialData?.products?.length > 0) ? initialData : undefined,
   });
 
   const products = data?.products ?? [];
+  const showSkeleton = isLoading || (isFetching && products.length === 0);
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -82,7 +83,7 @@ export default function NewArrivals({ initialData }) {
           </Link>
         </motion.div>
 
-        {isLoading ? (
+        {showSkeleton ? (
           <NewArrivalsSkeleton />
         ) : products.length === 0 ? (
           <p className="py-12 text-center text-sm text-muted-foreground">
