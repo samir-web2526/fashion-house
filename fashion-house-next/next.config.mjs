@@ -15,6 +15,15 @@ const isVercel = process.env.VERCEL === '1' || Boolean(process.env.VERCEL);
 const nextConfig = {
   reactStrictMode: true,
   ...(isVercel ? {} : { output: 'standalone' }),
+  async redirects() {
+    return [
+      {
+        source: '/shop',
+        destination: '/products',
+        permanent: true,
+      },
+    ];
+  },
 };
 
-export default nextConfig;
+export default nextConfig;

@@ -33,8 +33,11 @@ const getAllUsers = async (req, res) => {
 
 const getProfile = async (req, res) => {
     try {
-        const db = getDB();
+        if (!req.user || !req.user.id) {
+            return res.status(200).send({ user: null });
+        }
 
+        const db = getDB();
         const usersCollection = db.collection("users");
 
         const user = await usersCollection.findOne(
@@ -49,9 +52,7 @@ const getProfile = async (req, res) => {
         );
 
         if (!user) {
-            return res.status(404).send({
-                message: "User not found"
-            });
+            return res.status(200).send({ user: null });
         }
 
         res.send(user);

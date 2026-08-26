@@ -156,7 +156,7 @@ export default function ProductDetails({ children }) {
             <Home className="size-4" />
           </Link>
           <ChevronRight className="size-3" />
-          <Link href="/shop" className="hover:text-foreground">
+          <Link href="/products" className="hover:text-foreground">
             Shop
           </Link>
           <ChevronRight className="size-3" />
@@ -254,11 +254,10 @@ export default function ProductDetails({ children }) {
                             setActiveDisplayImage(colorObj.image);
                           }
                         }}
-                        className={`group relative flex items-center gap-2 rounded-lg border-2 p-1.5 transition-all ${
-                          isSelected
+                        className={`group relative flex items-center gap-2 rounded-lg border-2 p-1.5 transition-all ${isSelected
                             ? "border-foreground bg-muted/40 ring-1 ring-foreground"
                             : "border-border hover:border-foreground/50 bg-background"
-                        }`}
+                          }`}
                       >
                         <div className="size-10 overflow-hidden rounded border border-border bg-muted shrink-0">
                           <img
@@ -400,7 +399,7 @@ export default function ProductDetails({ children }) {
                 </li>
                 <li className="flex items-start gap-2">
                   <svg className="mt-0.5 size-3 shrink-0 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                   <span>24/7 কাস্টমার সাপোর্ট: <a href="/orders" className="text-foreground hover:underline">Order Tracking</a></span>
+                  <span>24/7 কাস্টমার সাপোর্ট: <a href="/orders" className="text-foreground hover:underline">Order Tracking</a></span>
                 </li>
               </ul>
             </div>

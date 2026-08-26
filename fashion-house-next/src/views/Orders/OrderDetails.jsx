@@ -187,7 +187,7 @@ export default function OrderDetails({ children }) {
     );
   }
 
-  if (!order) {
+  if (!order || order?.notFound) {
     return (
       <div className="min-h-screen bg-linear-to-b from-background via-background to-muted/20 px-4 py-8 sm:px-6 lg:px-8">
         <Helmet>

@@ -346,6 +346,12 @@ export default function MyOrders() {
   const trackMutation = useMutation({
     mutationFn: trackOrder,
     onSuccess: (data) => {
+      if (data?.notFound) {
+        setOrder(null);
+        setNotFound(true);
+        toast.error(data?.message || "Order not found");
+        return;
+      }
       setOrder(data);
       setNotFound(false);
     },

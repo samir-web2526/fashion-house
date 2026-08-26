@@ -32,10 +32,18 @@ export default function AdminSettings({ children }) {
   const [contactPhone, setContactPhone] = useState("");
   const [address, setAddress] = useState("");
   const [googleMapLink, setGoogleMapLink] = useState("");
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [emailEdited, setEmailEdited] = useState(false);
   const [phoneEdited, setPhoneEdited] = useState(false);
   const [addressEdited, setAddressEdited] = useState(false);
   const [mapEdited, setMapEdited] = useState(false);
+  const [fbEdited, setFbEdited] = useState(false);
+  const [instaEdited, setInstaEdited] = useState(false);
+  const [tiktokEdited, setTiktokEdited] = useState(false);
+  const [ytEdited, setYtEdited] = useState(false);
 
   const displaySiteName = siteNameEdited ? siteName : (data?.siteName || "");
   const displayLogo = logoPreview || data?.logo || "";
@@ -43,6 +51,10 @@ export default function AdminSettings({ children }) {
   const displayPhone = phoneEdited ? contactPhone : (data?.contactPhone || "");
   const displayAddress = addressEdited ? address : (data?.address || "");
   const displayGoogleMapLink = mapEdited ? googleMapLink : (data?.googleMapLink || "");
+  const displayFacebookUrl = fbEdited ? facebookUrl : (data?.facebookUrl || "");
+  const displayInstagramUrl = instaEdited ? instagramUrl : (data?.instagramUrl || "");
+  const displayTiktokUrl = tiktokEdited ? tiktokUrl : (data?.tiktokUrl || "");
+  const displayYoutubeUrl = ytEdited ? youtubeUrl : (data?.youtubeUrl || "");
 
   const handleSiteNameChange = (e) => {
     setSiteNameEdited(true);
@@ -53,17 +65,20 @@ export default function AdminSettings({ children }) {
     mutationFn: updateSettings,
     onSuccess: (res) => {
       toast.success("Settings updated successfully");
-      queryClient.setQueryData(["settings"], (old) => ({
-        ...old,
-        ...res,
-      }));
+      const updatedData = res?.data || res;
+      queryClient.setQueryData(["settings"], updatedData);
       queryClient.invalidateQueries({ queryKey: ["settings"] });
-      if (res.siteName) {
-        setSiteName(res.siteName);
-        setSiteNameEdited(true);
-      }
-      if (res.logo) {
-        setLogoPreview(res.logo);
+      setSiteNameEdited(false);
+      setEmailEdited(false);
+      setPhoneEdited(false);
+      setAddressEdited(false);
+      setMapEdited(false);
+      setFbEdited(false);
+      setInstaEdited(false);
+      setTiktokEdited(false);
+      setYtEdited(false);
+      if (res?.data?.logo || res?.logo) {
+        setLogoPreview(res?.data?.logo || res?.logo);
         setLogoFile(null);
       }
     },
@@ -110,7 +125,18 @@ export default function AdminSettings({ children }) {
     if (logoFile) {
       logo = await toBase64(logoFile);
     }
-    mutation.mutate({ siteName: displaySiteName, logo, contactEmail: displayEmail, contactPhone: displayPhone, address: displayAddress, googleMapLink: displayGoogleMapLink });
+    mutation.mutate({
+      siteName: displaySiteName,
+      logo,
+      contactEmail: displayEmail,
+      contactPhone: displayPhone,
+      address: displayAddress,
+      googleMapLink: displayGoogleMapLink,
+      facebookUrl: displayFacebookUrl,
+      instagramUrl: displayInstagramUrl,
+      tiktokUrl: displayTiktokUrl,
+      youtubeUrl: displayYoutubeUrl,
+    });
   };
 
   if (isLoading) {
@@ -251,6 +277,46 @@ export default function AdminSettings({ children }) {
             placeholder="https://www.google.com/maps/embed?..."
           />
           <p className="mt-1 text-xs text-muted-foreground">Go to Google Maps → Share → Embed a map → Copy the embed URL (starts with https://www.google.com/maps/embed)</p>
+        </div>
+
+        <div className="border-t border-border pt-4 space-y-4">
+          <h3 className="text-sm font-semibold text-foreground">Social Media Links</h3>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Facebook URL</label>
+            <Input
+              value={displayFacebookUrl}
+              onChange={(e) => { setFbEdited(true); setFacebookUrl(e.target.value); }}
+              placeholder="https://facebook.com/yourpage"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">Instagram URL</label>
+            <Input
+              value={displayInstagramUrl}
+              onChange={(e) => { setInstaEdited(true); setInstagramUrl(e.target.value); }}
+              placeholder="https://instagram.com/yourprofile"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">TikTok URL</label>
+            <Input
+              value={displayTiktokUrl}
+              onChange={(e) => { setTiktokEdited(true); setTiktokUrl(e.target.value); }}
+              placeholder="https://tiktok.com/@yourprofile"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">YouTube URL</label>
+            <Input
+              value={displayYoutubeUrl}
+              onChange={(e) => { setYtEdited(true); setYoutubeUrl(e.target.value); }}
+              placeholder="https://youtube.com/@yourchannel"
+            />
+          </div>
         </div>
 
         <Button type="submit" disabled={mutation.isPending}>

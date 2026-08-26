@@ -31,6 +31,10 @@ const useSettings = () => {
     contactPhone: data?.contactPhone || "",
     address: data?.address || "",
     googleMapLink: data?.googleMapLink || "",
+    facebookUrl: data?.facebookUrl || "",
+    instagramUrl: data?.instagramUrl || "",
+    tiktokUrl: data?.tiktokUrl || "",
+    youtubeUrl: data?.youtubeUrl || "",
     isLoading,
   };
 };

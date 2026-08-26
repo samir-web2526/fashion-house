@@ -16,7 +16,7 @@ export default function AuthProvider({ children }) {
   const fetchUser = useCallback(async () => {
     try {
       const data = await getProfile();
-      const userData = data?.user || data;
+      const userData = data?.user !== undefined ? data.user : (data?._id ? data : null);
       setUser(userData);
       setLoading(false);
       return userData;

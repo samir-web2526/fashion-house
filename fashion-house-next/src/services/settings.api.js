@@ -6,15 +6,7 @@ export const getSettings = async () => {
   return data;
 };
 
-export const updateSettings = async ({ siteName, logo, contactEmail, contactPhone, address, googleMapLink }) => {
-  const body = {};
-  if (siteName) body.siteName = siteName;
-  if (logo) body.logo = logo;
-  if (contactEmail !== undefined) body.contactEmail = contactEmail;
-  if (contactPhone !== undefined) body.contactPhone = contactPhone;
-  if (address !== undefined) body.address = address;
-  if (googleMapLink !== undefined) body.googleMapLink = googleMapLink;
-
-  const { data } = await axiosSecure.patch("/settings", body);
+export const updateSettings = async (payload) => {
+  const { data } = await axiosSecure.patch("/settings", payload);
   return data;
 };

@@ -18,7 +18,7 @@ const getSettings = async (req, res) => {
 
 const updateSettings = async (req, res) => {
   try {
-    const { siteName, logo, contactEmail, contactPhone, address, googleMapLink } = req.body;
+    const { siteName, logo, contactEmail, contactPhone, address, googleMapLink, facebookUrl, instagramUrl, tiktokUrl, youtubeUrl } = req.body;
 
     const updateData = {};
 
@@ -28,6 +28,10 @@ const updateSettings = async (req, res) => {
     if (contactPhone !== undefined) updateData.contactPhone = contactPhone;
     if (address !== undefined) updateData.address = address;
     if (googleMapLink !== undefined) updateData.googleMapLink = googleMapLink;
+    if (facebookUrl !== undefined) updateData.facebookUrl = facebookUrl;
+    if (instagramUrl !== undefined) updateData.instagramUrl = instagramUrl;
+    if (tiktokUrl !== undefined) updateData.tiktokUrl = tiktokUrl;
+    if (youtubeUrl !== undefined) updateData.youtubeUrl = youtubeUrl;
 
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ message: "No data to update" });

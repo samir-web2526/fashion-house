@@ -270,7 +270,8 @@ const trackOrder = async (req, res) => {
             }
 
             if (!order) {
-                return res.status(404).send({
+                return res.send({
+                    notFound: true,
                     message: "Order not found",
                 });
             }
@@ -292,7 +293,8 @@ const trackOrder = async (req, res) => {
                 .toArray();
 
             if (!orders.length) {
-                return res.status(404).send({
+                return res.send({
+                    notFound: true,
                     message: "Order not found",
                 });
             }

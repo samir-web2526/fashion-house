@@ -3,7 +3,20 @@
 import Footer from "@/views/sharedPages/Footer";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
-import { Shield, Truck, Headphones, Heart, Target, Users } from "lucide-react";
+import usePageTitle from "@/hooks/usePageTitle";
+import Link from "next/link";
+import {
+  Shield,
+  Truck,
+  Headphones,
+  Heart,
+  Target,
+  Users,
+  Sparkles,
+  CheckCircle2,
+  ArrowRight,
+  ShoppingBag,
+} from "lucide-react";
 
 const FEATURES = [
   {
@@ -14,7 +27,7 @@ const FEATURES = [
   {
     icon: Truck,
     title: "Fast Delivery",
-    description: "We deliver your orders quickly and reliably right to your doorstep.",
+    description: "We deliver your orders quickly and reliably right to your doorstep across Bangladesh.",
   },
   {
     icon: Headphones,
@@ -32,7 +45,7 @@ const VALUES = [
   {
     icon: Target,
     title: "Quality Guarantee",
-    description: "We carefully curate our products to ensure you receive only the best quality.",
+    description: "We carefully curate our products to ensure you receive only the finest quality.",
   },
   {
     icon: Users,
@@ -41,110 +54,142 @@ const VALUES = [
   },
 ];
 
-import usePageTitle from "@/hooks/usePageTitle";
-
 export default function About({ children }) {
   const { siteName } = useSettings();
   usePageTitle("About Us");
+
   return (
-    <div className="h-full overflow-y-auto bg-background">
+    <div className="h-full overflow-y-auto bg-background text-foreground">
       <Helmet>
         <title>{`About Us | ${siteName}`}</title>
       </Helmet>
 
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-foreground">About Us</h1>
-        <p className="mt-2 text-muted-foreground">Last updated: August 2026</p>
-
-        <div className="mt-8 space-y-12">
-          <div>
-            <h2 className="text-xl font-bold text-foreground">Who We Are</h2>
-            <p className="mt-2 text-muted-foreground">
-              Welcome to {siteName} — your one-stop destination for quality products at
-              unbeatable prices. We started with a simple mission: to make online shopping
-              accessible, affordable, and enjoyable for everyone.
-            </p>
-            <p className="mt-2 text-muted-foreground">
-              Founded with a passion for excellence, we have grown from a small startup to a
-              trusted e-commerce platform serving thousands of happy customers. Our journey is
-              fueled by the belief that everyone deserves access to great products without
-              breaking the bank.
-            </p>
+      {/* Hero Header */}
+      <div className="border-b border-border bg-gradient-to-b from-primary/5 via-background to-background py-12 sm:py-16">
+        <div className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-1 text-xs font-semibold text-primary">
+            <Sparkles className="size-3.5" /> Our Story & Mission
           </div>
-
-          <div>
-            <h2 className="text-xl font-bold text-foreground">What We Offer</h2>
-            <div className="mt-6 grid gap-6 sm:grid-cols-3">
-              {FEATURES.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <div
-                    key={feature.title}
-                    className="rounded-xl border border-border bg-card p-6 text-center"
-                  >
-                    <Icon className="mx-auto size-8 text-primary" />
-                    <h3 className="mt-3 font-semibold text-foreground">{feature.title}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{feature.description}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-bold text-foreground">Our Mission</h2>
-            <p className="mt-2 text-muted-foreground">
-              Our mission is to redefine the online shopping experience by combining
-              affordability with quality. We work directly with trusted suppliers to bring you
-              products that meet our high standards — all at prices that make sense.
-            </p>
-            <p className="mt-2 text-muted-foreground">
-              We are committed to transparency, fast delivery, and exceptional customer service.
-              Whether you are shopping for the first time or are a loyal customer, we want every
-              interaction with {siteName} to be seamless and satisfying.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-bold text-foreground">Our Values</h2>
-            <div className="mt-6 grid gap-6 sm:grid-cols-3">
-              {VALUES.map((value) => {
-                const Icon = value.icon;
-                return (
-                  <div
-                    key={value.title}
-                    className="rounded-xl border border-border bg-card p-6 text-center"
-                  >
-                    <Icon className="mx-auto size-8 text-primary" />
-                    <h3 className="mt-3 font-semibold text-foreground">{value.title}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{value.description}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-bold text-foreground">Why Choose Us?</h2>
-            <ul className="mt-2 list-inside list-disc space-y-2 text-muted-foreground">
-              <li>Wide range of carefully curated products</li>
-              <li>Competitive prices with regular deals and discounts</li>
-              <li>Secure payment options for worry-free shopping</li>
-              <li>Fast and reliable shipping across the country</li>
-              <li>Hassle-free return and refund policy</li>
-              <li>Dedicated customer support team available around the clock</li>
-            </ul>
-          </div>
-
-          <div className="rounded-xl border border-border bg-card p-6 text-center">
-            <h2 className="text-xl font-bold text-foreground">Join Our Growing Community</h2>
-            <p className="mt-2 text-muted-foreground">
-              Thousands of customers already trust {siteName} for their shopping needs.
-              Experience the difference today and discover why people keep coming back.
-            </p>
+          <h1 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+            About {siteName}
+          </h1>
+          <p className="mx-auto mt-3 max-w-2xl text-base text-muted-foreground sm:text-lg">
+            Providing elegance & lucrative outfit items sourced both locally & globally with uncompromised quality.
+          </p>
+          <div className="mt-4 inline-block text-xs font-medium text-muted-foreground/80">
+            Last updated: August 2026
           </div>
         </div>
       </div>
+
+      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8 space-y-12">
+        {/* Story Section */}
+        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-xs">
+          <h2 className="text-xl font-bold tracking-tight text-foreground border-b border-border pb-3">
+            Who We Are
+          </h2>
+          <p className="mt-4 text-sm sm:text-base text-muted-foreground leading-relaxed">
+            Welcome to <strong className="text-foreground">{siteName}</strong> — your premier destination for premium fashion and quality apparel at competitive prices. We started with a simple mission: to make modern, high-quality fashion accessible, enjoyable, and effortless for everyone.
+          </p>
+          <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
+            Founded with a commitment to craftsmanship and authenticity, we have grown into a trusted e-commerce platform serving thousands of satisfied customers across the country.
+          </p>
+        </div>
+
+        {/* What We Offer */}
+        <div className="space-y-6">
+          <h2 className="text-xl font-bold tracking-tight text-foreground border-b border-border pb-3">
+            What We Offer
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-3">
+            {FEATURES.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <div
+                  key={feature.title}
+                  className="flex flex-col items-center rounded-2xl border border-border bg-card p-6 text-center shadow-xs transition-all hover:border-primary/30 hover:shadow-md"
+                >
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Icon className="size-6" />
+                  </div>
+                  <h3 className="mt-4 text-base font-bold text-foreground">{feature.title}</h3>
+                  <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+                    {feature.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Our Values */}
+        <div className="space-y-6">
+          <h2 className="text-xl font-bold tracking-tight text-foreground border-b border-border pb-3">
+            Our Core Values
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-3">
+            {VALUES.map((value) => {
+              const Icon = value.icon;
+              return (
+                <div
+                  key={value.title}
+                  className="flex flex-col items-center rounded-2xl border border-border bg-card p-6 text-center shadow-xs transition-all hover:border-primary/30 hover:shadow-md"
+                >
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Icon className="size-6" />
+                  </div>
+                  <h3 className="mt-4 text-base font-bold text-foreground">{value.title}</h3>
+                  <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+                    {value.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Why Choose Us List */}
+        <div className="rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-xs">
+          <h2 className="text-xl font-bold tracking-tight text-foreground border-b border-border pb-3">
+            Why Choose {siteName}?
+          </h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {[
+              "Wide range of carefully curated fashion products",
+              "Competitive prices with exclusive offers & deals",
+              "Fast and reliable delivery across Bangladesh",
+              "Multiple secure payment methods including COD",
+              "Transparent and easy 7-day return policy",
+              "Dedicated customer support team available 24/7",
+            ].map((reason, idx) => (
+              <div key={idx} className="flex items-center gap-3">
+                <CheckCircle2 className="size-5 shrink-0 text-primary" />
+                <span className="text-sm text-foreground font-medium">{reason}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA Banner */}
+        <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <ShoppingBag className="size-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-foreground">Explore Our Collections</h3>
+              <p className="text-sm text-muted-foreground">Discover the latest products and trending fashion items.</p>
+            </div>
+          </div>
+          <Link
+            href="/products"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-xs transition-all hover:bg-primary/90"
+          >
+            Shop Now <ArrowRight className="size-4" />
+          </Link>
+        </div>
+      </div>
+
       <Footer />
     </div>
   );

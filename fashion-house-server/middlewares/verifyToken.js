@@ -26,4 +26,28 @@ const verifyToken = (req, res, next) => {
     }
 };
 
+const verifyOptionalToken = (req, res, next) => {
+    try {
+        const token = req.cookies.accessToken;
+
+        if (!token) {
+            req.user = null;
+            return next();
+        }
+
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
+
+        req.user = decoded;
+        next();
+
+    } catch (error) {
+        req.user = null;
+        next();
+    }
+};
+
 module.exports = verifyToken;
+module.exports.verifyOptionalToken = verifyOptionalToken;

@@ -7,6 +7,10 @@ const updateSettingsSchema = z.object({
   contactPhone: z.string().trim().optional().default(""),
   address: z.string().trim().optional().default(""),
   googleMapLink: z.string().trim().optional().default(""),
+  facebookUrl: z.string().trim().optional().default(""),
+  instagramUrl: z.string().trim().optional().default(""),
+  tiktokUrl: z.string().trim().optional().default(""),
+  youtubeUrl: z.string().trim().optional().default(""),
 });
 
 module.exports = {

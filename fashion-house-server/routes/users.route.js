@@ -9,6 +9,7 @@ const {
 
 const validate = require("../middlewares/validate");
 const verifyToken = require("../middlewares/verifyToken");
+const { verifyOptionalToken } = require("../middlewares/verifyToken");
 const verifyAdmin = require("../middlewares/verifyAdmin");
 
 const {
@@ -20,7 +21,7 @@ const router = express.Router();
 
 router.get("/", verifyToken, verifyAdmin, getAllUsers);
 
-router.get("/profile", verifyToken, getProfile);
+router.get("/profile", verifyOptionalToken, getProfile);
 
 router.patch(
     "/profile",
