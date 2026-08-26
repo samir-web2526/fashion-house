@@ -96,42 +96,88 @@ const createProduct = async (req, res) => {
     }
 };
 
+const getBestSellingProductsInternal = async (db) => {
+    const productsCollection = db.collection("products");
+    const ordersCollection = db.collection("orders");
+
+    let products = await ordersCollection
+        .aggregate([
+            { $unwind: "$items" },
+            {
+                $project: {
+                    productId: {
+                        $cond: {
+                            if: { $eq: [{ $type: "$items.productId" }, "string"] },
+                            then: {
+                                $convert: {
+                                    input: "$items.productId",
+                                    to: "objectId",
+                                    onError: "$items.productId",
+                                    onNull: "$items.productId"
+                                }
+                            },
+                            else: "$items.productId"
+                        }
+                    },
+                    quantity: "$items.quantity"
+                }
+            },
+            {
+                $group: {
+                    _id: "$productId",
+                    totalSold: { $sum: "$quantity" }
+                }
+            },
+            { $sort: { totalSold: -1 } },
+            { $limit: 8 },
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            { $unwind: "$product" },
+            {
+                $replaceRoot: {
+                    newRoot: {
+                        $mergeObjects: ["$product", { totalSold: "$totalSold" }]
+                    }
+                }
+            },
+            {
+                $project: {
+                    description: 0,
+                    dimensions: 0,
+                    reviews: 0,
+                    images: 0,
+                    sizeMeasurements: 0,
+                    warrantyInformation: 0,
+                    shippingInformation: 0,
+                    returnPolicy: 0,
+                    sizes: 0,
+                    meta: 0,
+                    tags: 0,
+                    sku: 0,
+                    weight: 0,
+                    availabilityStatus: 0,
+                    minimumOrderQuantity: 0
+                }
+            }
+        ])
+        .toArray();
+
+    return products.map(product => ({
+        ...product,
+        badge: "best-seller"
+    }));
+};
+
 const getBestSellingIds = async (db) => {
     return await withCache("bestSellingIdsSet", 30, async () => {
-        const ordersCollection = db.collection("orders");
-        const productsCollection = db.collection("products");
-
-        let bestProducts = await ordersCollection
-            .aggregate([
-                { $unwind: "$items" },
-                {
-                    $group: {
-                        _id: "$items.productId",
-                        totalSold: { $sum: "$items.quantity" }
-                    }
-                },
-                { $sort: { totalSold: -1 } },
-                { $limit: 8 }
-            ])
-            .toArray();
-
-        let bestIds = bestProducts.map(p => (p._id ? p._id.toString() : ""));
-        if (bestIds.length < 8) {
-            const fallback = await productsCollection
-                .find({
-                    _id: {
-                        $nin: bestIds.map(id => {
-                            try { return new ObjectId(id); } catch { return id; }
-                        })
-                    }
-                })
-                .sort({ rating: -1 })
-                .limit(8 - bestIds.length)
-                .project({ _id: 1 })
-                .toArray();
-            bestIds = [...bestIds, ...fallback.map(p => (p._id ? p._id.toString() : ""))];
-        }
-        return bestIds;
+        const bestProducts = await getBestSellingProductsInternal(db);
+        return Array.from(new Set(bestProducts.map(p => (p._id ? p._id.toString() : ""))));
     });
 };
 
@@ -423,113 +469,7 @@ const getBestSellingProducts = async (req, res) => {
     try {
         const result = await withCache("bestSellingProducts", 15, async () => {
             const db = getDB();
-            const productsCollection = db.collection("products");
-            const ordersCollection = db.collection("orders");
-
-            let products = await ordersCollection
-                .aggregate([
-                    { $unwind: "$items" },
-                    {
-                        $group: {
-                            _id: "$items.productId",
-                            totalSold: { $sum: "$items.quantity" }
-                        }
-                    },
-                    { $sort: { totalSold: -1 } },
-                    { $limit: 8 },
-                    {
-                        $lookup: {
-                            from: "products",
-                            localField: "_id",
-                            foreignField: "_id",
-                            as: "product"
-                        }
-                    },
-                    { $unwind: "$product" },
-                    {
-                        $replaceRoot: {
-                            newRoot: {
-                                $mergeObjects: ["$product", { totalSold: "$totalSold" }]
-                            }
-                        }
-                    },
-                    {
-                        $project: {
-                            description: 0,
-                            dimensions: 0,
-                            reviews: 0,
-                            images: 0,
-                            sizeMeasurements: 0,
-                            warrantyInformation: 0,
-                            shippingInformation: 0,
-                            returnPolicy: 0,
-                            sizes: 0,
-                            meta: 0,
-                            tags: 0,
-                            sku: 0,
-                            weight: 0,
-                            availabilityStatus: 0,
-                            minimumOrderQuantity: 0
-                        }
-                    }
-                ])
-                .toArray();
-
-            // Fallback: If there are no orders or less than 8 sold products, fill up with top-rated products
-            if (products.length < 8) {
-                const existingProductIds = products.map(p => p._id.toString());
-                const limitNeeded = 8 - products.length;
-                const fallbackProducts = await productsCollection
-                    .find({ 
-                        _id: { 
-                            $nin: existingProductIds.map(id => {
-                                try { return new ObjectId(id); } catch { return id; }
-                            }) 
-                        } 
-                    })
-                    .sort({ rating: -1 })
-                    .limit(limitNeeded)
-                    .project({
-                        description: 0,
-                        dimensions: 0,
-                        reviews: 0,
-                        images: 0,
-                        sizeMeasurements: 0,
-                        warrantyInformation: 0,
-                        shippingInformation: 0,
-                        returnPolicy: 0,
-                        sizes: 0,
-                        meta: 0,
-                        tags: 0,
-                        sku: 0,
-                        weight: 0,
-                        availabilityStatus: 0,
-                        minimumOrderQuantity: 0
-                    })
-                    .toArray();
-
-                products = [
-                    ...products,
-                    ...fallbackProducts.map(p => ({ ...p, totalSold: 0 }))
-                ];
-            }
-
-            const maxSold = products.length > 0
-                ? Math.max(...products.map(p => p.totalSold ?? 0))
-                : 0;
-            const maxRating = products.length > 0
-                ? Math.max(...products.map(p => p.rating ?? 0))
-                : 0;
-
-            return products.map(product => {
-                let badge = null;
-                if ((product.totalSold ?? 0) === maxSold && maxSold > 0) {
-                    badge = "best-seller";
-                } else if ((product.rating ?? 0) === maxRating && maxRating > 0) {
-                    badge = "top-rated";
-                }
-                return { ...product, badge };
-            });
+            return await getBestSellingProductsInternal(db);
         });
 
         res.send({ products: result });

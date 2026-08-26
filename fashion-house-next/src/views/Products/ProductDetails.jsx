@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import RelatedProducts from "@/components/sections/RelatedProducts";
 
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -85,6 +86,12 @@ export default function ProductDetails({ children }) {
       setActiveDisplayImage(null);
     }
   }
+
+  useEffect(() => {
+    if (id) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [id]);
 
   const allImages = useMemo(() => {
     if (!product) return [];
@@ -516,6 +523,9 @@ export default function ProductDetails({ children }) {
             <p className="whitespace-pre-line">{product.description}</p>
           </div>
         </div>
+
+        {/* Related Products Section */}
+        <RelatedProducts currentProduct={product} />
       </div>
     </>
   );
