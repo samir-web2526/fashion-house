@@ -129,7 +129,7 @@ const getBestSellingProductsInternal = async (db) => {
                 }
             },
             { $sort: { totalSold: -1 } },
-            { $limit: 8 },
+            { $limit: 15 },
             {
                 $lookup: {
                     from: "products",
