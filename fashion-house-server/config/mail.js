@@ -28,14 +28,16 @@ const transporter = nodemailer.createTransport(transportConfig);
 
 const sendMail = async ({ to, subject, html }) => {
   try {
-    return await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to,
       subject,
       html,
     });
+    console.log("Email sent successfully to:", to, "MessageId:", info?.messageId);
+    return info;
   } catch (error) {
-    console.error("Failed to send email:", error.message);
+    console.error("Failed to send email to:", to, "Error:", error.message);
     return null;
   }
 };

@@ -223,6 +223,7 @@ const createGuestOrder = async (req, res) => {
         const order = {
             userId: null,
             guestPhone: shippingAddress.phone,
+            guestEmail: shippingAddress.email,
             items: cart,
             totalItems,
             subtotal: totalPrice,
@@ -727,8 +728,11 @@ const cancelOrder = async (req, res) => {
 };
 
 const sendInvoiceEmail = async (order, targetEmail = null) => {
-    const email = targetEmail || order.shippingAddress?.email;
-    if (!email) return null;
+    const email = targetEmail || order.shippingAddress?.email || order.guestEmail || order.email;
+    if (!email) {
+        console.warn("No email address found for invoice on order:", order._id);
+        return null;
+    }
 
     const orderShortId = order._id?.toString().slice(-8).toUpperCase();
     const orderDate = new Date(order.createdAt || Date.now()).toLocaleDateString("en-BD", {
@@ -925,14 +929,17 @@ const sendInvoice = async (req, res) => {
             return res.status(404).send({ message: "Order not found" });
         }
 
-        const email = req.body?.email || order.shippingAddress?.email;
+        const email = req.body?.email || order.shippingAddress?.email || order.guestEmail || order.email;
         if (!email) {
             return res.status(400).send({ message: "No email address found for this order" });
         }
 
-        await sendInvoiceEmail(order, email);
+        const mailResult = await sendInvoiceEmail(order, email);
+        if (!mailResult) {
+            return res.status(500).send({ message: "Failed to send invoice email via SMTP" });
+        }
 
-        res.send({ message: "Invoice sent successfully" });
+        res.send({ message: "Invoice sent successfully", mailResult });
     } catch (error) {
         console.log(error);
         res.status(500).send({ message: "Failed to send invoice" });
