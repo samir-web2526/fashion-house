@@ -122,12 +122,32 @@ const createOrder = async (req, res) => {
         };
 
         const result = await ordersCollection.insertOne(order);
+        order._id = result.insertedId;
 
         await cartsCollection.deleteOne({
             userId: new ObjectId(req.user.id),
         });
 
+        // Deduct product stock
+        for (const item of cart) {
+            if (item.productId) {
+                const updatedProduct = await productsCollection.findOneAndUpdate(
+                    { _id: new ObjectId(item.productId) },
+                    { $inc: { stock: -item.quantity } },
+                    { returnDocument: "after" }
+                );
+                if (updatedProduct && updatedProduct.stock <= 0) {
+                    await productsCollection.updateOne(
+                        { _id: new ObjectId(item.productId) },
+                        { $set: { availabilityStatus: "Out of Stock", stock: 0 } }
+                    );
+                }
+            }
+        }
+
         clearCache();
+
+        sendInvoiceEmail(order).catch((err) => console.error("Error sending invoice email:", err));
 
         res.status(201).send({
             message: "Order placed successfully",
@@ -218,7 +238,28 @@ const createGuestOrder = async (req, res) => {
         };
 
         const result = await ordersCollection.insertOne(order);
+        order._id = result.insertedId;
+
+        // Deduct product stock
+        for (const item of cart) {
+            if (item.productId) {
+                const updatedProduct = await productsCollection.findOneAndUpdate(
+                    { _id: new ObjectId(item.productId) },
+                    { $inc: { stock: -item.quantity } },
+                    { returnDocument: "after" }
+                );
+                if (updatedProduct && updatedProduct.stock <= 0) {
+                    await productsCollection.updateOne(
+                        { _id: new ObjectId(item.productId) },
+                        { $set: { availabilityStatus: "Out of Stock", stock: 0 } }
+                    );
+                }
+            }
+        }
+
         clearCache();
+
+        sendInvoiceEmail(order).catch((err) => console.error("Error sending invoice email:", err));
 
         res.status(201).send({
             message: "Order placed successfully",
@@ -260,13 +301,21 @@ const trackOrder = async (req, res) => {
                 // Not a valid ObjectId, try short ID match
             }
 
-            // If not found, try matching by short ID (last 8 chars)
-            if (!order && orderId.length <= 24) {
-                const allOrders = await ordersCollection.find({}).sort({ createdAt: -1 }).toArray();
-                order = allOrders.find((o) => {
-                    const shortId = o._id?.toString().slice(-8).toUpperCase();
-                    return shortId === orderId.toUpperCase();
-                });
+            // If not found, try matching by short ID (last 8 chars) directly in MongoDB
+            if (!order && orderId && orderId.trim().length > 0) {
+                const cleanShortId = orderId.trim().toUpperCase();
+                try {
+                    order = await ordersCollection.findOne({
+                        $expr: {
+                            $regexMatch: {
+                                input: { $toString: "$_id" },
+                                regex: new RegExp(cleanShortId + "$", "i")
+                            }
+                        }
+                    });
+                } catch {
+                    // Fallback search
+                }
             }
 
             if (!order) {
@@ -677,6 +726,179 @@ const cancelOrder = async (req, res) => {
     }
 };
 
+const sendInvoiceEmail = async (order, targetEmail = null) => {
+    const email = targetEmail || order.shippingAddress?.email;
+    if (!email) return null;
+
+    const orderShortId = order._id?.toString().slice(-8).toUpperCase();
+    const orderDate = new Date(order.createdAt || Date.now()).toLocaleDateString("en-BD", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+    const shippingLabel = order.deliveryArea === "inside_dhaka" ? "Inside Dhaka" : "Outside Dhaka";
+    const postalLine = order.shippingAddress?.postalCode
+        ? `${order.shippingAddress.city}, ${order.shippingAddress.postalCode}`
+        : order.shippingAddress?.city || "";
+
+    const itemsHtml = (order.items || [])
+        .map(
+            (item, idx) => `
+            <tr style="background:${idx % 2 === 0 ? "#fff" : "#fafafa"};">
+                <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;font-size:13px;color:#333;">
+                    <span style="font-weight:600;">${item.title}</span>${item.color ? `<br><span style="font-size:11px;color:#888;">Color: ${item.color}</span>` : ""}${item.size ? `<br><span style="font-size:11px;color:#888;">Size: ${item.size}</span>` : ""}
+                </td>
+                <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:center;font-size:13px;color:#555;">${item.quantity}</td>
+                <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;color:#555;">৳${Number(item.price).toFixed(2)}</td>
+                <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;font-weight:600;color:#1a1a1a;">৳${Number(item.subtotal || item.price * item.quantity).toFixed(2)}</td>
+            </tr>`
+        )
+        .join("");
+
+    const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Invoice #${orderShortId}</title>
+    </head>
+    <body style="margin:0;padding:0;font-family:'Segoe UI',Arial,Helvetica,sans-serif;background:#f0f2f5;color:#333;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f2f5;">
+            <tr>
+                <td align="center" style="padding:30px 15px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+                        <tr>
+                            <td style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:32px 36px;">
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td>
+                                            <h1 style="margin:0;font-size:26px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">Zayan Classic</h1>
+                                            <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:1px;text-transform:uppercase;">Order Invoice</p>
+                                        </td>
+                                        <td align="right" valign="top">
+                                            <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 16px;display:inline-block;">
+                                                <span style="font-size:11px;color:rgba(255,255,255,0.5);display:block;text-transform:uppercase;letter-spacing:0.5px;">Invoice</span>
+                                                <span style="font-size:16px;font-weight:700;color:#ffffff;">#${orderShortId}</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="background:#fafafa;border-bottom:1px solid #f0f0f0;padding:18px 36px;">
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Date</td>
+                                        <td align="right" style="font-size:13px;color:#555;font-weight:500;">${orderDate}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="padding:32px 36px;">
+                                <p style="margin:0 0 16px;font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1.5px;">Order Items</p>
+                                <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #f0f0f0;border-radius:8px;overflow:hidden;border-collapse:separate;">
+                                    <thead>
+                                        <tr style="background:#1a1a1a;">
+                                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">Product</th>
+                                            <th style="padding:12px 16px;text-align:center;font-size:11px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">Qty</th>
+                                            <th style="padding:12px 16px;text-align:right;font-size:11px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">Price</th>
+                                            <th style="padding:12px 16px;text-align:right;font-size:11px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>${itemsHtml}</tbody>
+                                </table>
+
+                                <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
+                                    <tr>
+                                        <td style="padding:10px 0;">
+                                            <table width="100%" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td style="font-size:13px;color:#888;">Subtotal</td>
+                                                    <td align="right" style="font-size:13px;color:#555;">৳${Number(order.subtotal).toFixed(2)}</td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:10px 0;">
+                                            <table width="100%" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td style="font-size:13px;color:#888;">Shipping (${shippingLabel})</td>
+                                                    <td align="right" style="font-size:13px;color:${order.shippingCost > 0 ? "#555" : "#22c55e"};font-weight:500;">${order.shippingCost > 0 ? "৳" + Number(order.shippingCost).toFixed(2) : "Free"}</td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:14px 0 0;border-top:2px solid #1a1a1a;margin-top:4px;">
+                                            <table width="100%" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td style="font-size:16px;font-weight:700;color:#1a1a1a;">Total</td>
+                                                    <td align="right" style="font-size:18px;font-weight:700;color:#1a1a1a;">৳${Number(order.totalPrice).toFixed(2)}</td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <div style="border-top:1px solid #f0f0f0;margin:32px 0;"></div>
+
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td width="50%" valign="top" style="padding-right:20px;">
+                                            <p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1.5px;">Shipping Address</p>
+                                            <div style="background:#fafafa;border-radius:8px;padding:16px;border:1px solid #f0f0f0;">
+                                                <p style="margin:0;font-size:14px;font-weight:600;color:#1a1a1a;">${order.shippingAddress?.fullName || ""}</p>
+                                                <p style="margin:6px 0 0;font-size:13px;color:#666;line-height:1.7;">
+                                                    ${order.shippingAddress?.phone || ""}<br>
+                                                    ${order.shippingAddress?.address || ""}<br>
+                                                    ${postalLine}
+                                                </p>
+                                            </div>
+                                        </td>
+
+                                        <td width="50%" valign="top" style="padding-left:20px;">
+                                            <p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1.5px;">Payment Info</p>
+                                            <div style="background:#fafafa;border-radius:8px;padding:16px;border:1px solid #f0f0f0;">
+                                                <p style="margin:0 0 8px;font-size:13px;color:#666;">
+                                                    <span style="color:#888;">Method:</span> <span style="font-weight:600;color:#333;text-transform:capitalize;">${order.paymentMethod || "N/A"}</span>
+                                                </p>
+                                                <p style="margin:0;font-size:13px;color:#666;">
+                                                    <span style="color:#888;">Status:</span>
+                                                    <span style="display:inline-block;background:${order.paymentStatus === "paid" ? "#dcfce7" : "#fef3c7"};color:${order.paymentStatus === "paid" ? "#16a34a" : "#d97706"};padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;margin-left:4px;text-transform:capitalize;">${order.paymentStatus || "pending"}</span>
+                                                </p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="background:#fafafa;border-top:1px solid #f0f0f0;padding:20px 36px;text-align:center;">
+                                <p style="margin:0 0 4px;font-size:12px;color:#999;">Thank you for shopping with <strong style="color:#666;">Zayan Classic</strong></p>
+                                <p style="margin:0;font-size:11px;color:#ccc;">If you have any questions, contact us at our support.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>`;
+
+    return await sendMail({
+        to: email,
+        subject: `Invoice - Order #${orderShortId} | Zayan Classic`,
+        html,
+    });
+};
+
 const sendInvoice = async (req, res) => {
     try {
         const { id } = req.params;
@@ -708,187 +930,7 @@ const sendInvoice = async (req, res) => {
             return res.status(400).send({ message: "No email address found for this order" });
         }
 
-        const orderShortId = order._id?.toString().slice(-8).toUpperCase();
-        const orderDate = new Date(order.createdAt).toLocaleDateString("en-BD", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        });
-        const shippingLabel = order.deliveryArea === "inside_dhaka" ? "Inside Dhaka" : "Outside Dhaka";
-        const postalLine = order.shippingAddress?.postalCode
-            ? `${order.shippingAddress.city}, ${order.shippingAddress.postalCode}`
-            : order.shippingAddress?.city || "";
-
-        const itemsHtml = order.items
-            .map(
-                (item, idx) => `
-                <tr style="background:${idx % 2 === 0 ? "#fff" : "#fafafa"};">
-                    <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;font-size:13px;color:#333;">
-                        <span style="font-weight:600;">${item.title}</span>${item.color ? `<br><span style="font-size:11px;color:#888;">Color: ${item.color}</span>` : ""}${item.size ? `<br><span style="font-size:11px;color:#888;">Size: ${item.size}</span>` : ""}
-                    </td>
-                    <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:center;font-size:13px;color:#555;">${item.quantity}</td>
-                    <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;color:#555;">৳${Number(item.price).toFixed(2)}</td>
-                    <td style="padding:14px 16px;border-bottom:1px solid #f0f0f0;text-align:right;font-size:13px;font-weight:600;color:#1a1a1a;">৳${Number(item.subtotal || item.price * item.quantity).toFixed(2)}</td>
-                </tr>`
-            )
-            .join("");
-
-        const html = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Invoice #${orderShortId}</title>
-        </head>
-        <body style="margin:0;padding:0;font-family:'Segoe UI',Arial,Helvetica,sans-serif;background:#f0f2f5;color:#333;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f2f5;">
-                <tr>
-                    <td align="center" style="padding:30px 15px;">
-                        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-
-                            <!-- Header -->
-                            <tr>
-                                <td style="background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%);padding:32px 36px;">
-                                    <table width="100%" cellpadding="0" cellspacing="0">
-                                        <tr>
-                                            <td>
-                                                <h1 style="margin:0;font-size:26px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">Zayan Classic</h1>
-                                                <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:1px;text-transform:uppercase;">Order Invoice</p>
-                                            </td>
-                                            <td align="right" valign="top">
-                                                <div style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 16px;display:inline-block;">
-                                                    <span style="font-size:11px;color:rgba(255,255,255,0.5);display:block;text-transform:uppercase;letter-spacing:0.5px;">Invoice</span>
-                                                    <span style="font-size:16px;font-weight:700;color:#ffffff;">#${orderShortId}</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-
-                            <!-- Order Info Bar -->
-                            <tr>
-                                <td style="background:#fafafa;border-bottom:1px solid #f0f0f0;padding:18px 36px;">
-                                    <table width="100%" cellpadding="0" cellspacing="0">
-                                        <tr>
-                                            <td style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.5px;">Date</td>
-                                            <td align="right" style="font-size:13px;color:#555;font-weight:500;">${orderDate}</td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-
-                            <!-- Body -->
-                            <tr>
-                                <td style="padding:32px 36px;">
-
-                                    <!-- Items Section -->
-                                    <p style="margin:0 0 16px;font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1.5px;">Order Items</p>
-                                    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #f0f0f0;border-radius:8px;overflow:hidden;border-collapse:separate;">
-                                        <thead>
-                                            <tr style="background:#1a1a1a;">
-                                                <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">Product</th>
-                                                <th style="padding:12px 16px;text-align:center;font-size:11px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">Qty</th>
-                                                <th style="padding:12px 16px;text-align:right;font-size:11px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">Price</th>
-                                                <th style="padding:12px 16px;text-align:right;font-size:11px;font-weight:600;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">Subtotal</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>${itemsHtml}</tbody>
-                                    </table>
-
-                                    <!-- Totals -->
-                                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;">
-                                        <tr>
-                                            <td style="padding:10px 0;">
-                                                <table width="100%" cellpadding="0" cellspacing="0">
-                                                    <tr>
-                                                        <td style="font-size:13px;color:#888;">Subtotal</td>
-                                                        <td align="right" style="font-size:13px;color:#555;">৳${Number(order.subtotal).toFixed(2)}</td>
-                                                    </tr>
-                                                </table>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding:10px 0;">
-                                                <table width="100%" cellpadding="0" cellspacing="0">
-                                                    <tr>
-                                                        <td style="font-size:13px;color:#888;">Shipping (${shippingLabel})</td>
-                                                        <td align="right" style="font-size:13px;color:${order.shippingCost > 0 ? "#555" : "#22c55e"};font-weight:500;">${order.shippingCost > 0 ? "৳" + Number(order.shippingCost).toFixed(2) : "Free"}</td>
-                                                    </tr>
-                                                </table>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding:14px 0 0;border-top:2px solid #1a1a1a;margin-top:4px;">
-                                                <table width="100%" cellpadding="0" cellspacing="0">
-                                                    <tr>
-                                                        <td style="font-size:16px;font-weight:700;color:#1a1a1a;">Total</td>
-                                                        <td align="right" style="font-size:18px;font-weight:700;color:#1a1a1a;">৳${Number(order.totalPrice).toFixed(2)}</td>
-                                                    </tr>
-                                                </table>
-                                            </td>
-                                        </tr>
-                                    </table>
-
-                                    <!-- Divider -->
-                                    <div style="border-top:1px solid #f0f0f0;margin:32px 0;"></div>
-
-                                    <!-- Two Column: Shipping + Payment -->
-                                    <table width="100%" cellpadding="0" cellspacing="0">
-                                        <tr>
-                                            <!-- Shipping Address -->
-                                            <td width="50%" valign="top" style="padding-right:20px;">
-                                                <p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1.5px;">Shipping Address</p>
-                                                <div style="background:#fafafa;border-radius:8px;padding:16px;border:1px solid #f0f0f0;">
-                                                    <p style="margin:0;font-size:14px;font-weight:600;color:#1a1a1a;">${order.shippingAddress?.fullName || ""}</p>
-                                                    <p style="margin:6px 0 0;font-size:13px;color:#666;line-height:1.7;">
-                                                        ${order.shippingAddress?.phone || ""}<br>
-                                                        ${order.shippingAddress?.address || ""}<br>
-                                                        ${postalLine}
-                                                    </p>
-                                                </div>
-                                            </td>
-
-                                            <!-- Payment Info -->
-                                            <td width="50%" valign="top" style="padding-left:20px;">
-                                                <p style="margin:0 0 12px;font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1.5px;">Payment Info</p>
-                                                <div style="background:#fafafa;border-radius:8px;padding:16px;border:1px solid #f0f0f0;">
-                                                    <p style="margin:0 0 8px;font-size:13px;color:#666;">
-                                                        <span style="color:#888;">Method:</span> <span style="font-weight:600;color:#333;text-transform:capitalize;">${order.paymentMethod || "N/A"}</span>
-                                                    </p>
-                                                    <p style="margin:0;font-size:13px;color:#666;">
-                                                        <span style="color:#888;">Status:</span>
-                                                        <span style="display:inline-block;background:${order.paymentStatus === "paid" ? "#dcfce7" : "#fef3c7"};color:${order.paymentStatus === "paid" ? "#16a34a" : "#d97706"};padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;margin-left:4px;text-transform:capitalize;">${order.paymentStatus || "pending"}</span>
-                                                    </p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </table>
-
-                                </td>
-                            </tr>
-
-                            <!-- Footer -->
-                            <tr>
-                                <td style="background:#fafafa;border-top:1px solid #f0f0f0;padding:20px 36px;text-align:center;">
-                                    <p style="margin:0 0 4px;font-size:12px;color:#999;">Thank you for shopping with <strong style="color:#666;">Zayan Classic</strong></p>
-                                    <p style="margin:0;font-size:11px;color:#ccc;">If you have any questions, contact us at our support.</p>
-                                </td>
-                            </tr>
-
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </body>
-        </html>`;
-
-        await sendMail({
-            to: email,
-            subject: `Invoice - Order #${orderShortId} | Zayan Classic`,
-            html,
-        });
+        await sendInvoiceEmail(order, email);
 
         res.send({ message: "Invoice sent successfully" });
     } catch (error) {

@@ -1,17 +1,30 @@
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 465,
-  secure: Number(process.env.SMTP_PORT) === 465,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+const host = process.env.SMTP_HOST || "smtp.gmail.com";
+const isGmail = host.includes("gmail") || (process.env.SMTP_USER || "").endsWith("@gmail.com");
+
+const transportConfig = isGmail
+  ? {
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    }
+  : {
+      host: host,
+      port: Number(process.env.SMTP_PORT) || 465,
+      secure: Number(process.env.SMTP_PORT) === 465,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    };
+
+const transporter = nodemailer.createTransport(transportConfig);
 
 const sendMail = async ({ to, subject, html }) => {
   try {

@@ -35,7 +35,7 @@ app.use(
             if (allowedOrigins.includes(cleanOrigin) || process.env.NODE_ENV !== "production") {
                 return callback(null, true);
             }
-            return callback(null, true);
+            return callback(new Error("Not allowed by CORS"));
         },
         credentials: true,
     })
