@@ -102,7 +102,7 @@ export default function Checkout({ children }) {
       clearLocalCart();
       refetchCartCount(0);
       if (data?.insertedId) {
-        sendOrderInvoice(data.insertedId).catch(() => {});
+        sendOrderInvoice(data.insertedId).catch(() => { });
       }
       router.push(`/orders/${data.insertedId}`);
     },
@@ -172,37 +172,37 @@ export default function Checkout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background px-3 py-6 sm:px-6 lg:px-8 overflow-x-hidden w-full max-w-full">
       <Helmet><title>{`Checkout | ${siteName}`}</title></Helmet>
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="mx-auto max-w-5xl w-full">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-2xl font-bold tracking-tight text-foreground"
+            className="text-xl sm:text-2xl font-bold tracking-tight text-foreground"
           >
             Checkout
           </motion.h1>
-          <Button variant="ghost" size="sm" onClick={() => router.push("/cart")}>
+          <Button variant="ghost" size="sm" className="w-fit" onClick={() => router.push("/cart")}>
             <ArrowLeft className="size-4" data-icon="inline-start" />
             Back to Cart
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="grid gap-8 lg:grid-cols-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-full overflow-hidden">
+          <div className="grid gap-6 lg:gap-8 lg:grid-cols-5 w-full max-w-full">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="space-y-6 lg:col-span-3"
+              className="space-y-6 lg:col-span-3 w-full min-w-0"
             >
-              <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <div className="rounded-xl border border-border bg-card p-3.5 sm:p-6 shadow-sm overflow-hidden w-full max-w-full">
                 <h2 className="mb-4 text-lg font-semibold text-foreground">
                   Shipping Information
                 </h2>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
+                <div className="grid gap-4 sm:grid-cols-2 w-full">
+                  <div className="sm:col-span-2 w-full">
                     <label className="mb-1.5 block text-sm font-medium text-foreground">
                       Full Name *
                     </label>
@@ -215,7 +215,7 @@ export default function Checkout({ children }) {
                       <p className="mt-1 text-xs text-gray-600">{errors.fullName.message}</p>
                     )}
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-2 w-full">
                     <label className="mb-1.5 block text-sm font-medium text-foreground">
                       Phone *
                     </label>
@@ -228,7 +228,7 @@ export default function Checkout({ children }) {
                       <p className="mt-1 text-xs text-gray-600">{errors.phone.message}</p>
                     )}
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-2 w-full">
                     <label className="mb-1.5 block text-sm font-medium text-foreground">
                       Email (for invoice) *
                     </label>
@@ -242,7 +242,7 @@ export default function Checkout({ children }) {
                       <p className="mt-1 text-xs text-gray-600">{errors.email.message}</p>
                     )}
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-2 w-full">
                     <label className="mb-1.5 block text-sm font-medium text-foreground">
                       Address *
                     </label>
@@ -255,7 +255,7 @@ export default function Checkout({ children }) {
                       <p className="mt-1 text-xs text-gray-600">{errors.address.message}</p>
                     )}
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-2 w-full">
                     <label className="mb-1.5 block text-sm font-medium text-foreground">
                       City *
                     </label>
@@ -268,13 +268,13 @@ export default function Checkout({ children }) {
                       <p className="mt-1 text-xs text-gray-600">{errors.city.message}</p>
                     )}
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-2 w-full">
                     <label className="mb-1.5 block text-sm font-medium text-foreground">
                       Delivery Area *
                     </label>
                     <select
                       {...register("deliveryArea")}
-                      className="flex h-10 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="box-border flex h-10 w-full max-w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="inside_dhaka">inside Dhaka - ৳60</option>
                       <option value="outside_dhaka">outside Dhaka - ৳120</option>
@@ -286,15 +286,15 @@ export default function Checkout({ children }) {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <div className="rounded-xl border border-border bg-card p-3.5 sm:p-6 shadow-sm overflow-hidden w-full max-w-full">
                 <h2 className="mb-4 text-lg font-semibold text-foreground">
                   Payment Method
                 </h2>
-                <div className="flex items-center gap-3 rounded-lg border border-primary bg-primary/5 p-4">
-                  <div className="size-4 rounded-full border-4 border-primary" />
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Cash on Delivery</p>
-                    <p className="text-xs text-muted-foreground">Pay when you receive</p>
+                <div className="flex items-center gap-3 rounded-lg border border-primary bg-primary/5 p-3.5 sm:p-4 w-full">
+                  <div className="size-4 shrink-0 rounded-full border-4 border-primary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground truncate">Cash on Delivery</p>
+                    <p className="text-xs text-muted-foreground truncate">Pay when you receive</p>
                   </div>
                 </div>
               </div>
@@ -304,28 +304,28 @@ export default function Checkout({ children }) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="lg:col-span-2"
+              className="lg:col-span-2 w-full min-w-0"
             >
-              <div className="sticky top-24 rounded-xl border border-border bg-card p-6 shadow-sm">
+              <div className="sticky top-24 rounded-xl border border-border bg-card p-3.5 sm:p-6 shadow-sm overflow-hidden w-full max-w-full">
                 <h2 className="mb-4 text-lg font-semibold text-foreground">Order Summary</h2>
 
                 <div className="mb-4 max-h-60 space-y-3 overflow-y-auto">
                   {items.map((item) => (
-                    <div key={item.productId} className="flex gap-3">
+                    <div key={item.productId} className="flex items-center gap-2 sm:gap-3 overflow-hidden">
                       <img
                         src={item.thumbnail}
                         alt={item.title}
-                        className="size-12 shrink-0 rounded-lg object-cover"
+                        className="size-10 sm:size-12 shrink-0 rounded-lg object-cover"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">
+                        <p className="truncate text-xs sm:text-sm font-medium text-foreground">
                           {item.title}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Qty: {item.quantity}
                         </p>
                       </div>
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="shrink-0 text-xs sm:text-sm font-medium text-foreground">
                         {formatBDT(item.price * item.quantity)}
                       </span>
                     </div>
@@ -333,16 +333,16 @@ export default function Checkout({ children }) {
                 </div>
 
                 <div className="space-y-3 border-t border-border pt-4 text-sm">
-                  <div className="flex justify-between text-muted-foreground">
+                  <div className="flex justify-between items-center text-muted-foreground">
                     <span>Subtotal ({totalItems} items)</span>
-                    <span>{formatBDT(totalPrice)}</span>
+                    <span className="shrink-0 font-medium text-foreground">{formatBDT(totalPrice)}</span>
                   </div>
-                  <div className="flex justify-between text-muted-foreground">
+                  <div className="flex justify-between items-center text-muted-foreground">
                     <span>Shipping {isInsideDhaka ? "(Dhaka)" : "(Outside Dhaka)"}</span>
                     {isFreeShipping ? (
-                       <span className="text-foreground font-medium">Free</span>
+                      <span className="text-foreground font-medium">Free</span>
                     ) : (
-                      <span>{formatBDT(shipping)}</span>
+                      <span className="shrink-0 text-xs font-medium text-foreground">{formatBDT(shipping)}</span>
                     )}
                   </div>
                   {!isFreeShipping && (
@@ -351,9 +351,9 @@ export default function Checkout({ children }) {
                     </p>
                   )}
                   <div className="border-t border-border pt-3">
-                    <div className="flex justify-between text-base font-bold text-foreground">
+                    <div className="flex items-baseline justify-between text-base font-bold text-foreground">
                       <span>Total</span>
-                      <span>{formatBDT(total)}</span>
+                      <span className="shrink-0 font-bold">{formatBDT(total)}</span>
                     </div>
                   </div>
                 </div>

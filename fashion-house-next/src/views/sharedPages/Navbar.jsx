@@ -84,18 +84,18 @@ const Navbar = () => {
                     <div className="flex items-center gap-2 sm:gap-3">
                         <Link
                             href="/orders"
-                            className="hidden items-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 lg:flex"
+                            className="hidden items-center gap-1.5 rounded-lg bg-primary px-3 py-2 sm:px-4 sm:py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 md:flex shrink-0"
                         >
-                            <Package className="size-4" />
-                            <span className="hidden xl:inline">Track Your Order</span>
+                            <Package className="size-4 shrink-0" />
+                            <span>Track Your Order</span>
                         </Link>
 
                         <a
                             href={`tel:${mounted ? contactPhone : "+8801XXXXXXXXX"}`}
-                            className="hidden items-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 lg:flex"
+                            className="hidden items-center gap-1.5 rounded-lg bg-primary px-3 py-2 sm:px-4 sm:py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 md:flex shrink-0"
                         >
-                            <Phone className="size-4" />
-                            <span className="hidden xl:inline">{mounted ? contactPhone : "+8809613111333"}</span>
+                            <Phone className="size-4 shrink-0" />
+                            <span>{mounted ? contactPhone : "+8809613111333"}</span>
                         </a>
 
                         <div className="hidden h-6 w-px bg-border lg:block" />

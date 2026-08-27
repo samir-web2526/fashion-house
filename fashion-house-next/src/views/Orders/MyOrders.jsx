@@ -415,18 +415,18 @@ export default function MyOrders() {
         {/* Track Form */}
         <form
           onSubmit={handleTrack}
-          className="rounded border border-border bg-card p-6 sm:p-8"
+          className="rounded-xl border border-border bg-card p-3.5 sm:p-8"
         >
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Input
               value={trackValue}
               onChange={(e) => setTrackValue(e.target.value)}
-              placeholder="Enter Phone Number / Invoice Number"
-              className="flex-1"
+              placeholder="Enter Phone or Invoice Number"
+              className="h-10 sm:h-11 flex-1 text-sm"
             />
             <Button
               type="submit"
-              className="rounded bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 sm:w-auto"
+              className="h-10 sm:h-11 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground hover:bg-primary/90 sm:w-auto shrink-0 flex items-center justify-center"
               disabled={trackMutation.isPending}
             >
               {trackMutation.isPending ? (

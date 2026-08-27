@@ -78,8 +78,8 @@ export default function Cart({ children }) {
           ...old,
           items: old.items.map((item) =>
             item.productId === id &&
-            (item.size || "") === (size || "") &&
-            (item.color || "") === (color || "")
+              (item.size || "") === (size || "") &&
+              (item.color || "") === (color || "")
               ? { ...item, quantity }
               : item
           ),
@@ -206,9 +206,8 @@ export default function Cart({ children }) {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className={`flex gap-3 rounded-xl border bg-card p-3 shadow-sm sm:gap-4 sm:p-4 ${
-                  !ok ? "border-muted-foreground" : "border-border"
-                }`}
+                className={`flex gap-3 rounded-xl border bg-card p-3 shadow-sm sm:gap-4 sm:p-4 ${!ok ? "border-muted-foreground" : "border-border"
+                  }`}
               >
                 <Link
                   href={`/product/${item.productId}`}

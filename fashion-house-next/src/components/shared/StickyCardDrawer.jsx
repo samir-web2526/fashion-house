@@ -103,9 +103,8 @@ export default function StickyCartDrawer() {
       />
 
       <div
-        className={`fixed inset-y-0 right-0 z-9999 w-full max-w-sm overflow-y-auto bg-background shadow-2xl transition-transform duration-300 ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed inset-y-0 right-0 z-9999 w-full max-w-sm overflow-y-auto bg-background shadow-2xl transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div className="flex items-center justify-between border-b border-border px-4 py-4">
           <div>

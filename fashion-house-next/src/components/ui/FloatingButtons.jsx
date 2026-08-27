@@ -7,12 +7,14 @@ import useCart from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function FloatingButtons() {
+  const [mounted, setMounted] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { cartCount } = useCart();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 200);
     };
@@ -29,8 +31,10 @@ export default function FloatingButtons() {
     window.dispatchEvent(new Event("open-cart-drawer"));
   };
 
+  if (!mounted) return null;
+
   return (
-    <div className="fixed bottom-6 right-6 z-9999 flex flex-col gap-3 items-center sm:bottom-8 sm:right-8 sm:gap-4">
+    <div className="fixed bottom-4 right-3 z-9999 flex flex-col gap-3 items-center sm:bottom-8 sm:right-8 sm:gap-4">
       {showScrollTop && (
         <button
           onClick={scrollToTop}
