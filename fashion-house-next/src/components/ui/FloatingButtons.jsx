@@ -5,13 +5,23 @@ import { FaWhatsapp, FaArrowUp } from "react-icons/fa";
 import { ShoppingCart } from "lucide-react";
 import useCart from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
+import useSettings from "@/hooks/useSettings";
 
 export default function FloatingButtons() {
   const [mounted, setMounted] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { cartCount } = useCart();
   const { user } = useAuth();
+  const { contactPhone } = useSettings();
   const isAdmin = user?.role === "admin";
+
+  const rawNumber = contactPhone ? contactPhone.replace(/[^0-9]/g, "") : "01348060997";
+  const whatsappNumber = rawNumber.startsWith("88")
+    ? rawNumber
+    : rawNumber.startsWith("0")
+      ? `88${rawNumber}`
+      : rawNumber;
+  const whatsappUrl = `https://wa.me/${whatsappNumber}`;
 
   useEffect(() => {
     setMounted(true);
@@ -46,7 +56,7 @@ export default function FloatingButtons() {
       )}
 
       <a
-        href="https://wa.me/+8801940005000"
+        href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-110 sm:h-14 sm:w-14"

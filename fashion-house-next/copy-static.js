@@ -18,13 +18,41 @@ function copyDir(src, dest) {
   }
 }
 
+function findServerJsDirs(dir) {
+  let results = [];
+  if (!fs.existsSync(dir)) return results;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (let entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isFile() && entry.name === 'server.js') {
+      results.push(dir);
+    } else if (entry.isDirectory() && entry.name !== 'node_modules') {
+      results.push(...findServerJsDirs(fullPath));
+    }
+  }
+  return results;
+}
+
 try {
   const standalonePath = path.join(__dirname, '.next', 'standalone');
   if (fs.existsSync(standalonePath)) {
-    console.log('Copying static assets for standalone build...');
+    console.log('Searching for server.js location in standalone build...');
+    
+    // Copy to root standalone directory
     copyDir(path.join(__dirname, 'public'), path.join(standalonePath, 'public'));
     copyDir(path.join(__dirname, '.next', 'static'), path.join(standalonePath, '.next', 'static'));
-    console.log('Static assets copied successfully!');
+
+    // Find subdirectories containing server.js (e.g. .next/standalone/fashion-house-next)
+    const serverDirs = findServerJsDirs(standalonePath);
+    serverDirs.forEach((serverDir) => {
+      if (serverDir !== standalonePath) {
+        console.log(`Copying static assets beside server.js in: ${serverDir}`);
+        copyDir(path.join(__dirname, 'public'), path.join(serverDir, 'public'));
+        copyDir(path.join(__dirname, '.next', 'static'), path.join(serverDir, '.next', 'static'));
+      }
+    });
+
+    console.log('Static assets copied successfully to all target standalone locations!');
   } else {
     console.log('Skipping static copy: standalone build output not active.');
   }
