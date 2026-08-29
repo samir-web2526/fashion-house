@@ -1,6 +1,5 @@
 "use client";
 
-import Footer from "@/views/sharedPages/Footer";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
 import usePageTitle from "@/hooks/usePageTitle";
@@ -78,7 +77,7 @@ export default function Privacy({ children }) {
   ];
 
   return (
-    <div className="h-full overflow-y-auto bg-background text-foreground">
+    <div className="bg-background text-foreground">
       <Helmet>
         <title>{`Privacy Policy | ${siteName}`}</title>
       </Helmet>
@@ -168,8 +167,6 @@ export default function Privacy({ children }) {
           </Link>
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 }

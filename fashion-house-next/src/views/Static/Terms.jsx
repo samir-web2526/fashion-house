@@ -1,6 +1,5 @@
 "use client";
 
-import Footer from "@/views/sharedPages/Footer";
 import { Helmet } from "react-helmet-async";
 import useSettings from "@/hooks/useSettings";
 import usePageTitle from "@/hooks/usePageTitle";
@@ -76,7 +75,7 @@ export default function Terms({ children }) {
   ];
 
   return (
-    <div className="h-full overflow-y-auto bg-background text-foreground">
+    <div className="bg-background text-foreground">
       <Helmet>
         <title>{`Terms & Conditions | ${siteName}`}</title>
       </Helmet>
@@ -166,8 +165,6 @@ export default function Terms({ children }) {
           </Link>
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 }

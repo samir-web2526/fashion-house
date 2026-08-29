@@ -8,7 +8,6 @@ import Hero from "@/components/sections/Hero";
 import NewArrivals from "@/components/sections/NewArrivals";
 import WhyChooseUs from "@/components/sections/WhyChooseUs";
 import FAQ from "@/components/sections/FAQ";
-import Footer from "@/views/sharedPages/Footer";
 import useSettings from "@/hooks/useSettings";
 // 
 import { useEffect } from "react";
@@ -32,7 +31,6 @@ export default function Home({ initialData }) {
       <FlashSale initialData={initialData?.flashSaleData} />
       <WhyChooseUs />
       <FAQ />
-      <Footer />
     </div>
   );
 }
