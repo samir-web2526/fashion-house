@@ -64,7 +64,7 @@ const login = async (req, res) => {
             },
             process.env.JWT_SECRET,
             {
-                expiresIn: "15m"
+                expiresIn: "1d"
             }
         );
 
@@ -84,7 +84,7 @@ const login = async (req, res) => {
             sameSite: process.env.NODE_ENV === "production"
                 ? "none"
                 : "lax",
-            maxAge: 15 * 60 * 1000
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
 
         res.cookie("refreshToken", refreshToken, {
@@ -93,7 +93,7 @@ const login = async (req, res) => {
             sameSite: process.env.NODE_ENV === "production"
                 ? "none"
                 : "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         res.status(200).send({
@@ -186,7 +186,7 @@ const refreshToken = async (req, res) => {
             },
             process.env.JWT_SECRET,
             {
-                expiresIn: "15m"
+                expiresIn: "1d"
             }
         );
 
@@ -206,7 +206,7 @@ const refreshToken = async (req, res) => {
             sameSite: process.env.NODE_ENV === "production"
                 ? "none"
                 : "lax",
-            maxAge: 15 * 60 * 1000
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
         });
 
         res.cookie("refreshToken", newRefreshToken, {
@@ -215,7 +215,7 @@ const refreshToken = async (req, res) => {
             sameSite: process.env.NODE_ENV === "production"
                 ? "none"
                 : "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
         res.send({

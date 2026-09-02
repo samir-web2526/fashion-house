@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getSettings } from "../services/settings.api";
 
+import { getApiUrl } from "../utils/getApiUrl";
+
 const useSettings = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["settings"],
@@ -20,7 +22,8 @@ const useSettings = () => {
         link.rel = "shortcut icon";
         document.head.appendChild(link);
       }
-      link.href = logo;
+      const apiUrl = getApiUrl();
+      link.href = `${apiUrl}/settings/logo`;
     }
   }, [logo]);
 

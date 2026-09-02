@@ -60,7 +60,40 @@ const updateSettings = async (req, res) => {
   }
 };
 
+const getSettingsLogo = async (req, res) => {
+  try {
+    const db = getDB();
+    const settingsCollection = db.collection("settings");
+    const settings = await settingsCollection.findOne({});
+
+    if (!settings || !settings.logo) {
+      return res.status(404).send("Logo not found");
+    }
+
+    const logoStr = settings.logo;
+    // Handle base64 format (e.g., data:image/png;base64,iVBORw0KGgo...)
+    if (logoStr.startsWith("data:image/")) {
+      const matches = logoStr.match(/^data:image\/([a-zA-Z+]+);base64,(.+)$/);
+      if (!matches || matches.length !== 3) {
+        return res.status(400).send("Invalid logo image data");
+      }
+      const contentType = `image/${matches[1] === "jpg" ? "jpeg" : matches[1]}`;
+      const imgBuffer = Buffer.from(matches[2], "base64");
+
+      res.set("Content-Type", contentType);
+      res.set("Cache-Control", "public, max-age=86400"); // Cache for 1 day
+      return res.send(imgBuffer);
+    } else {
+      // If it's already a URL, redirect to it
+      return res.redirect(logoStr);
+    }
+  } catch (error) {
+    res.status(500).send("Failed to retrieve settings logo");
+  }
+};
+
 module.exports = {
   getSettings,
   updateSettings,
+  getSettingsLogo,
 };

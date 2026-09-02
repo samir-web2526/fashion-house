@@ -3,6 +3,7 @@ const express = require("express");
 const {
   getSettings,
   updateSettings,
+  getSettingsLogo,
 } = require("../controllers/settings.controller");
 
 const validate = require("../middlewares/validate");
@@ -16,6 +17,7 @@ const {
 const router = express.Router();
 
 router.get("/", getSettings);
+router.get("/logo", getSettingsLogo);
 
 router.patch(
   "/",
